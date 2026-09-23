@@ -34,8 +34,8 @@ export default function DashboardPage() {
     <div className="p-8 space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-100">Dashboard</h1>
-        <p className="text-slate-400 mt-1 text-sm">
+        <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+        <p className="text-slate-500 mt-1 text-sm">
           Salary analytics across all active employees — amounts normalised to USD
         </p>
       </div>

@@ -11,10 +11,10 @@ interface Props {
 
 export default function PieBreakdown({ title, data }: Props) {
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-      <h3 className="text-sm font-semibold text-slate-300 mb-4">{title}</h3>
+    <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+      <h3 className="text-sm font-semibold text-slate-700 mb-4">{title}</h3>
       {data.length === 0 ? (
-        <div className="h-48 flex items-center justify-center text-slate-600 text-sm">No data</div>
+        <div className="h-48 flex items-center justify-center text-slate-400 text-sm">No data</div>
       ) : (
         <ResponsiveContainer width="100%" height={220}>
           <PieChart>
@@ -33,16 +33,17 @@ export default function PieBreakdown({ title, data }: Props) {
             </Pie>
             <Tooltip
               contentStyle={{
-                background: '#1e293b',
-                border: '1px solid #334155',
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
                 borderRadius: '8px',
-                color: '#f1f5f9',
+                color: '#0f172a',
                 fontSize: '12px',
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
               }}
             />
             <Legend
               formatter={(value) => (
-                <span style={{ color: '#94a3b8', fontSize: '12px' }}>{value}</span>
+                <span style={{ color: '#64748b', fontSize: '12px' }}>{value}</span>
               )}
             />
           </PieChart>

@@ -3,8 +3,8 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { CreateEmployeePayload, Department, JobLevel, EmploymentType, EmployeeStatus } from '@/lib/api';
-import { DEPARTMENTS, JOB_LEVELS, EMPLOYMENT_TYPES, COUNTRIES, cn } from '@/lib/utils';
+import { CreateEmployeePayload } from '@/lib/api';
+import { DEPARTMENTS, JOB_LEVELS, EMPLOYMENT_TYPES, COUNTRIES } from '@/lib/utils';
 
 const schema = z.object({
   firstName: z.string().min(1, 'Required'),
@@ -31,31 +31,10 @@ interface Props {
 }
 
 export default function EmployeeForm({ defaultValues, onSubmit, isSubmitting, submitLabel = 'Save' }: Props) {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormValues>({
+  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues,
   });
-
-  const fields = [
-    {
-      section: 'Personal Information',
-      inputs: [
-        { id: 'firstName', label: 'First Name', type: 'text', placeholder: 'Alice' },
-        { id: 'lastName', label: 'Last Name', type: 'text', placeholder: 'Smith' },
-        { id: 'email', label: 'Email', type: 'email', placeholder: 'alice@acmecorp.com' },
-      ],
-    },
-    {
-      section: 'Role',
-      inputs: [
-        { id: 'jobTitle', label: 'Job Title', type: 'text', placeholder: 'Senior Software Engineer' },
-      ],
-    },
-  ];
 
   return (
     <form onSubmit={handleSubmit((v) => onSubmit(v as CreateEmployeePayload))} className="space-y-8">
@@ -120,27 +99,15 @@ export default function EmployeeForm({ defaultValues, onSubmit, isSubmitting, su
 
       {/* Compensation */}
       <Section title="Compensation">
-        <p className="text-xs text-slate-500 mb-4">
+        <p className="text-xs text-slate-400 mb-4">
           Enter amounts in the employee&apos;s local currency. Currency is auto-assigned based on country.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Base Salary" error={errors.baseSalary?.message}>
-            <input
-              {...register('baseSalary')}
-              type="number"
-              min={0}
-              placeholder="95000"
-              className={inputClass}
-            />
+            <input {...register('baseSalary')} type="number" min={0} placeholder="95000" className={inputClass} />
           </Field>
           <Field label="Bonus (optional)" error={errors.bonus?.message}>
-            <input
-              {...register('bonus')}
-              type="number"
-              min={0}
-              placeholder="10000"
-              className={inputClass}
-            />
+            <input {...register('bonus')} type="number" min={0} placeholder="10000" className={inputClass} />
           </Field>
         </div>
       </Section>
@@ -148,7 +115,7 @@ export default function EmployeeForm({ defaultValues, onSubmit, isSubmitting, su
       <button
         type="submit"
         disabled={isSubmitting}
-        className="px-6 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="px-6 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
       >
         {isSubmitting ? 'Saving...' : submitLabel}
       </button>
@@ -159,7 +126,7 @@ export default function EmployeeForm({ defaultValues, onSubmit, isSubmitting, su
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-4 pb-2 border-b border-slate-800">
+      <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4 pb-2 border-b border-slate-200">
         {title}
       </h2>
       {children}
@@ -167,28 +134,18 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Field({
-  label,
-  error,
-  children,
-  className,
-}: {
-  label: string;
-  error?: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
+function Field({ label, error, children, className }: { label: string; error?: string; children: React.ReactNode; className?: string }) {
   return (
     <div className={className}>
-      <label className="block text-xs font-medium text-slate-400 mb-1.5">{label}</label>
+      <label className="block text-xs font-medium text-slate-600 mb-1.5">{label}</label>
       {children}
-      {error && <p className="text-xs text-rose-400 mt-1">{error}</p>}
+      {error && <p className="text-xs text-rose-500 mt-1">{error}</p>}
     </div>
   );
 }
 
 const inputClass =
-  'w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500';
+  'w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100';
 
 const selectClass =
-  'w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-indigo-500';
+  'w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100';

@@ -11,31 +11,32 @@ interface Props {
 
 export default function DistributionChart({ data }: Props) {
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-      <h3 className="text-sm font-semibold text-slate-300 mb-6">Salary Distribution (USD)</h3>
+    <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+      <h3 className="text-sm font-semibold text-slate-700 mb-6">Salary Distribution (USD)</h3>
       {data.length === 0 ? (
-        <div className="h-48 flex items-center justify-center text-slate-600 text-sm">No data</div>
+        <div className="h-48 flex items-center justify-center text-slate-400 text-sm">No data</div>
       ) : (
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={data} margin={{ top: 0, right: 0, bottom: 40, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
             <XAxis
               dataKey="label"
-              tick={{ fill: '#64748b', fontSize: 10 }}
+              tick={{ fill: '#94a3b8', fontSize: 10 }}
               angle={-35}
               textAnchor="end"
               interval={0}
             />
-            <YAxis tick={{ fill: '#64748b', fontSize: 11 }} width={45} />
+            <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} width={45} />
             <Tooltip
               contentStyle={{
-                background: '#1e293b',
-                border: '1px solid #334155',
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
                 borderRadius: '8px',
-                color: '#f1f5f9',
+                color: '#0f172a',
                 fontSize: '12px',
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
               }}
-              cursor={{ fill: '#1e293b' }}
+              cursor={{ fill: '#f8fafc' }}
             />
             <Bar dataKey="count" fill="#8b5cf6" radius={[4, 4, 0, 0]} maxBarSize={48} name="Employees" />
           </BarChart>
