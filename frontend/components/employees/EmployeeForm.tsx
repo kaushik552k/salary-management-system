@@ -51,12 +51,15 @@ interface Props {
 const inputClass = 'w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100';
 const selectClass = inputClass;
 
-function Field({ label, error, children, className }: {
-  label: string; error?: string; children: React.ReactNode; className?: string;
+function Field({ label, required, error, children, className }: {
+  label: string; required?: boolean; error?: string; children: React.ReactNode; className?: string;
 }) {
   return (
     <div className={className}>
-      <label className="block text-xs font-medium text-slate-600 mb-1.5">{label}</label>
+      <label className="block text-xs font-medium text-slate-600 mb-1.5">
+        {label}
+        {required && <span className="text-rose-500 ml-1">*</span>}
+      </label>
       {children}
       {error && <p className="text-xs text-rose-500 mt-1">{error}</p>}
     </div>
@@ -85,13 +88,13 @@ export default function EmployeeForm({ defaultValues, onSubmit, isSubmitting, su
       {/* Personal */}
       <Section title="Personal Information">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="First Name" error={errors.firstName?.message}>
+          <Field label="First Name" required error={errors.firstName?.message}>
             <input {...register('firstName')} placeholder="Alice" className={inputClass} />
           </Field>
-          <Field label="Last Name" error={errors.lastName?.message}>
+          <Field label="Last Name" required error={errors.lastName?.message}>
             <input {...register('lastName')} placeholder="Smith" className={inputClass} />
           </Field>
-          <Field label="Email" error={errors.email?.message} className="sm:col-span-2">
+          <Field label="Email" required error={errors.email?.message} className="sm:col-span-2">
             <input {...register('email')} type="email" placeholder="alice@acmecorp.com" className={inputClass} />
           </Field>
           <Field label="Date of Birth">
@@ -115,34 +118,34 @@ export default function EmployeeForm({ defaultValues, onSubmit, isSubmitting, su
       {/* Role */}
       <Section title="Role & Organisation">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Job Title" error={errors.jobTitle?.message} className="sm:col-span-2">
+          <Field label="Job Title" required error={errors.jobTitle?.message} className="sm:col-span-2">
             <input {...register('jobTitle')} placeholder="Senior Software Engineer" className={inputClass} />
           </Field>
-          <Field label="Department" error={errors.department?.message}>
+          <Field label="Department" required error={errors.department?.message}>
             <select {...register('department')} className={selectClass}>
               <option value="">Select department</option>
               {DEPARTMENTS.map(d => <option key={d}>{d}</option>)}
             </select>
           </Field>
-          <Field label="Job Level" error={errors.jobLevel?.message}>
+          <Field label="Job Level" required error={errors.jobLevel?.message}>
             <select {...register('jobLevel')} className={selectClass}>
               <option value="">Select level</option>
               {JOB_LEVELS.map(l => <option key={l}>{l}</option>)}
             </select>
           </Field>
-          <Field label="Employment Type" error={errors.employmentType?.message}>
+          <Field label="Employment Type" required error={errors.employmentType?.message}>
             <select {...register('employmentType')} className={selectClass}>
               <option value="">Select type</option>
               {EMPLOYMENT_TYPES.map(t => <option key={t}>{t}</option>)}
             </select>
           </Field>
-          <Field label="Country" error={errors.country?.message}>
+          <Field label="Country" required error={errors.country?.message}>
             <select {...register('country')} className={selectClass}>
               <option value="">Select country</option>
               {COUNTRIES.map(c => <option key={c}>{c}</option>)}
             </select>
           </Field>
-          <Field label="Joining Date" error={errors.joiningDate?.message}>
+          <Field label="Joining Date" required error={errors.joiningDate?.message}>
             <input {...register('joiningDate')} type="date" className={inputClass} />
           </Field>
           <Field label="Status">
@@ -158,7 +161,7 @@ export default function EmployeeForm({ defaultValues, onSubmit, isSubmitting, su
       <Section title="Compensation">
         <p className="text-xs text-slate-400 mb-4">Enter amounts in the employee's local currency.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Base Salary" error={errors.baseSalary?.message}>
+          <Field label="Base Salary" required error={errors.baseSalary?.message}>
             <input {...register('baseSalary')} type="number" min="0" placeholder="95000" className={inputClass} />
           </Field>
           <Field label="Allowances (Annual)">

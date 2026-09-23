@@ -183,6 +183,10 @@ async function http<T>(path: string, options?: RequestInit): Promise<T> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
+    if (body.details && Array.isArray(body.details)) {
+      const msgs = body.details.map((d: any) => `${d.field}: ${d.message}`).join(', ');
+      throw new Error(`${body.error || 'Validation failed'}: ${msgs}`);
+    }
     throw new Error(body?.error ?? `HTTP ${res.status}`);
   }
 

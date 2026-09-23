@@ -5,7 +5,7 @@ import { useAnalyticsSummary, useRecentPayRuns, usePayrollComponents } from '@/h
 import { useEmployees } from '@/hooks/use-employees';
 import { formatINR, formatINRFull } from '@/lib/utils';
 import { Employee } from '@/lib/api';
-import { Download, CalendarClock, Users, Wallet, BadgeCheck } from 'lucide-react';
+import { Download, CalendarClock, Users, Wallet, BadgeCheck, X, AlertCircle } from 'lucide-react';
 
 function computePayroll(e: Employee) {
   const monthly = e.baseSalary / 12;
@@ -26,6 +26,7 @@ export default function PayRunsPage() {
   const { data: components } = usePayrollComponents();
   const { data: employees, isLoading } = useEmployees({ status: 'Active', limit: 50 });
   const [activeTab, setActiveTab] = useState<'summary' | 'tax'>('summary');
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
 
   const now = new Date();
   const period = now.toLocaleString('en-IN', { month: 'long', year: 'numeric' });
@@ -58,11 +59,53 @@ export default function PayRunsPage() {
           <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
             <Download className="w-4 h-4" /> Export
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 transition-colors shadow-sm">
+          <button 
+            onClick={() => setShowPaymentDialog(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 transition-colors shadow-sm"
+          >
             <BadgeCheck className="w-4 h-4" /> Submit and Approve
           </button>
         </div>
       </div>
+
+      {/* Payment Gateway Dialog */}
+      {showPaymentDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                <BadgeCheck className="w-5 h-5 text-indigo-600" />
+                Submit Payroll
+              </h3>
+              <button 
+                onClick={() => setShowPaymentDialog(false)}
+                className="p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-8 text-center space-y-4">
+              <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto">
+                <AlertCircle className="w-8 h-8" />
+              </div>
+              <div>
+                <h4 className="text-base font-semibold text-slate-800 mb-1">Payment Gateway Required</h4>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  We haven't integrated a payment gateway yet. You cannot process actual payments at this time.
+                </p>
+              </div>
+            </div>
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+              <button 
+                onClick={() => setShowPaymentDialog(false)}
+                className="px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-indigo-500 transition-colors shadow-sm"
+              >
+                Understood
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
