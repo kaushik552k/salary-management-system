@@ -25,6 +25,8 @@ import {
   Pencil, Trash2, ChevronUp, ChevronDown,
 } from 'lucide-react';
 import Link from 'next/link';
+import { PageTransition } from '@/components/ui/animations';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const col = createColumnHelper<Employee>();
 
@@ -165,9 +167,9 @@ export default function EmployeesTable() {
   const exportUrl = employeesApi.exportUrl({ search, department, country, jobLevel, employmentType, status, sortBy, sortOrder });
 
   return (
-    <div className="p-8 space-y-6">
+    <PageTransition className="p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Employees</h1>
           <p className="text-slate-500 mt-1 text-sm">
@@ -191,8 +193,8 @@ export default function EmployeesTable() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-48">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3">
+        <div className="relative col-span-1 sm:col-span-2 lg:flex-1 lg:min-w-48">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
@@ -237,46 +239,53 @@ export default function EmployeesTable() {
               ))}
             </thead>
             <tbody>
-              {isLoading ? (
-                Array.from({ length: 10 }).map((_, i) => (
-                  <tr key={i} className="border-b border-slate-100">
-                    {Array.from({ length: COLUMNS.length + 1 }).map((_, j) => (
-                      <td key={j} className="px-4 py-3"><div className="h-4 bg-slate-100 rounded animate-pulse" /></td>
-                    ))}
+              <AnimatePresence mode="popLayout">
+                {isLoading ? (
+                  Array.from({ length: 10 }).map((_, i) => (
+                    <tr key={i} className="border-b border-slate-100">
+                      {Array.from({ length: COLUMNS.length + 1 }).map((_, j) => (
+                        <td key={j} className="px-4 py-3"><div className="h-4 bg-slate-100 rounded animate-pulse" /></td>
+                      ))}
+                    </tr>
+                  ))
+                ) : table.getRowModel().rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={COLUMNS.length + 1} className="px-4 py-16 text-center text-slate-400">No employees found</td>
                   </tr>
-                ))
-              ) : table.getRowModel().rows.length === 0 ? (
-                <tr>
-                  <td colSpan={COLUMNS.length + 1} className="px-4 py-16 text-center text-slate-400">No employees found</td>
-                </tr>
-              ) : (
-                table.getRowModel().rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className="border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer group"
-                    onClick={() => router.push(`/employees/${row.original.id}`)}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-4 py-3 whitespace-nowrap">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                ) : (
+                  table.getRowModel().rows.map((row, index) => (
+                    <motion.tr
+                      layout
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2, delay: Math.min(index * 0.05, 0.5) }}
+                      key={row.id}
+                      className="border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer group"
+                      onClick={() => router.push(`/employees/${row.original.id}`)}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id} className="px-4 py-3 whitespace-nowrap">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                      <td className="px-4 py-3 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Link href={`/employees/${row.original.id}/edit`} className="p-1.5 rounded-md hover:bg-slate-200 text-slate-400 hover:text-slate-700">
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Link>
+                          <button
+                            onClick={() => handleDelete(row.original.id, `${row.original.firstName} ${row.original.lastName}`)}
+                            className="p-1.5 rounded-md hover:bg-rose-50 text-slate-400 hover:text-rose-500"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
-                    ))}
-                    <td className="px-4 py-3 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Link href={`/employees/${row.original.id}/edit`} className="p-1.5 rounded-md hover:bg-slate-200 text-slate-400 hover:text-slate-700">
-                          <Pencil className="w-3.5 h-3.5" />
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(row.original.id, `${row.original.firstName} ${row.original.lastName}`)}
-                          className="p-1.5 rounded-md hover:bg-rose-50 text-slate-400 hover:text-rose-500"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
+                    </motion.tr>
+                  ))
+                )}
+              </AnimatePresence>
             </tbody>
           </table>
         </div>
@@ -299,7 +308,7 @@ export default function EmployeesTable() {
           </div>
         )}
       </div>
-    </div>
+    </PageTransition>
   );
 }
 

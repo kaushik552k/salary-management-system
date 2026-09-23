@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Settings, X, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { Bell, Settings, X, CheckCircle, AlertCircle, Clock, Menu } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
 const DUMMY_NOTIFICATIONS = [
@@ -9,7 +9,7 @@ const DUMMY_NOTIFICATIONS = [
   { id: 3, title: 'Compliance alert', desc: 'Missing PAN details for 3 employees.', time: '1 day ago', type: 'warning', icon: AlertCircle },
 ];
 
-export default function TopNavbar() {
+export default function TopNavbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -24,7 +24,15 @@ export default function TopNavbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
   return (
-    <header className="h-14 bg-white border-b border-slate-200 flex items-center px-6 gap-4 shrink-0 z-10 shadow-sm">
+    <header className="h-14 bg-white border-b border-slate-200 flex items-center px-4 sm:px-6 gap-4 shrink-0 z-10 shadow-sm">
+      {/* Mobile Menu Toggle */}
+      <button 
+        onClick={onMenuClick}
+        className="md:hidden p-2 -ml-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+
       {/* Spacer */}
       <div className="flex-1" />
 

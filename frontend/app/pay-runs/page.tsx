@@ -6,6 +6,7 @@ import { useEmployees } from '@/hooks/use-employees';
 import { formatINR, formatINRFull } from '@/lib/utils';
 import { Employee } from '@/lib/api';
 import { Download, CalendarClock, Users, Wallet, BadgeCheck, X, AlertCircle } from 'lucide-react';
+import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/animations';
 
 function computePayroll(e: Employee) {
   const monthly = e.baseSalary / 12;
@@ -45,9 +46,9 @@ export default function PayRunsPage() {
   const avgNet = empList.length > 0 ? totalNet / empList.length : 0;
 
   return (
-    <div className="p-6 space-y-6">
+    <PageTransition className="p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold text-slate-900">Regular Payroll</h1>
@@ -108,7 +109,7 @@ export default function PayRunsPage() {
       )}
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center">
@@ -143,19 +144,19 @@ export default function PayRunsPage() {
           </div>
           <p className="text-xs text-slate-400 ml-12">{summary?.activeEmployees?.toLocaleString('en-IN')} Employees</p>
         </div>
-      </div>
+      </StaggerContainer>
 
       {/* Taxes & Deductions Summary */}
       <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
         <h3 className="text-sm font-semibold text-slate-700 mb-3">Taxes & Deductions</h3>
-        <div className="grid grid-cols-3 gap-6">
+        <StaggerContainer className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
           {components?.slice(2, 5).map((c) => (
-            <div key={c.component}>
+            <StaggerItem key={c.component}>
               <p className="text-xs text-slate-400 uppercase tracking-wide">{c.component}</p>
               <p className="text-lg font-bold text-slate-800 mt-0.5 tabular-nums">{formatINR(c.amountINR)}</p>
-            </div>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       </div>
 
       {/* Tabs */}
@@ -230,6 +231,6 @@ export default function PayRunsPage() {
           </div>
         </div>
       </div>
-    </div>
+    </PageTransition>
   );
 }

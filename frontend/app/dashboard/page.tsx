@@ -12,6 +12,7 @@ import ComplianceWidget from '@/components/analytics/ComplianceWidget';
 import RecentPayRuns from '@/components/analytics/RecentPayRuns';
 import { Users, TrendingUp, Clock, Calendar, ArrowUp, Star, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/animations';
 
 function KpiCard({ title, value, sub, badge, accent, icon, loading }: {
   title: string;
@@ -23,25 +24,27 @@ function KpiCard({ title, value, sub, badge, accent, icon, loading }: {
   loading?: boolean;
 }) {
   return (
-    <div data-testid="kpicard" className={`bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow`}>
-      <div className={`w-10 h-10 rounded-xl ${accent} flex items-center justify-center mb-3`}>
-        {icon}
-      </div>
-      <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">{title}</p>
-      {loading ? (
-        <div className="h-8 w-36 bg-slate-100 rounded animate-pulse mt-2" />
-      ) : (
-        <div className="flex items-end gap-2 mt-1">
-          <p className="text-2xl font-bold text-slate-900 tabular-nums">{value}</p>
-          {badge && (
-            <span className={`text-xs font-semibold pb-0.5 flex items-center gap-0.5 ${badge.color}`}>
-              <ArrowUp className="w-3 h-3" />{badge.label}
-            </span>
-          )}
+    <StaggerItem>
+      <div data-testid="kpicard" className={`bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow`}>
+        <div className={`w-10 h-10 rounded-xl ${accent} flex items-center justify-center mb-3`}>
+          {icon}
         </div>
-      )}
-      {sub && <p className="text-xs text-slate-400 mt-1">{sub}</p>}
-    </div>
+        <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">{title}</p>
+        {loading ? (
+          <div className="h-8 w-36 bg-slate-100 rounded animate-pulse mt-2" />
+        ) : (
+          <div className="flex items-end gap-2 mt-1">
+            <p className="text-2xl font-bold text-slate-900 tabular-nums">{value}</p>
+            {badge && (
+              <span className={`text-xs font-semibold pb-0.5 flex items-center gap-0.5 ${badge.color}`}>
+                <ArrowUp className="w-3 h-3" />{badge.label}
+              </span>
+            )}
+          </div>
+        )}
+        {sub && <p className="text-xs text-slate-400 mt-1">{sub}</p>}
+      </div>
+    </StaggerItem>
   );
 }
 
@@ -63,9 +66,9 @@ export default function DashboardPage() {
     : '—';
 
   return (
-    <div className="p-6 space-y-6">
+    <PageTransition className="p-4 sm:p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">{greeting}!</h1>
           <p className="text-slate-400 text-sm mt-0.5">People thrive when payroll runs smoothly.</p>
@@ -74,7 +77,7 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+      <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
           title="Total Employees"
           value={summary?.activeEmployees.toLocaleString('en-IN') ?? '—'}
@@ -109,10 +112,9 @@ export default function DashboardPage() {
           icon={<Calendar className="w-5 h-5 text-purple-600" />}
           loading={isLoading}
         />
-      </div>
+      </StaggerContainer>
 
-      {/* Charts Row 1 */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+      <StaggerContainer className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Payroll Trend */}
         <div className="xl:col-span-2 bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-1">
@@ -166,10 +168,9 @@ export default function DashboardPage() {
             <div className="h-48 bg-slate-100 rounded animate-pulse" />
           )}
         </div>
-      </div>
+      </StaggerContainer>
 
-      {/* Charts Row 2 */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+      <StaggerContainer className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Promo card */}
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 flex flex-col justify-between">
           <div>
@@ -210,10 +211,10 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-      </div>
+      </StaggerContainer>
 
       {/* Dept + Level Charts */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      <StaggerContainer className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SalaryBarChart
           title="Avg Salary by Department"
           data={(byDept ?? []).map(d => ({ name: d.department, value: d.avgSalaryUSD, count: d.count }))}
@@ -224,7 +225,7 @@ export default function DashboardPage() {
           data={(byLevel ?? []).map(l => ({ name: l.level, value: l.avgSalaryUSD, count: l.count }))}
           color="#10b981"
         />
-      </div>
-    </div>
+      </StaggerContainer>
+    </PageTransition>
   );
 }
