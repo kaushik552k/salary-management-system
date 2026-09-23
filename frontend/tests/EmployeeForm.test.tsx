@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import EmployeeForm from '../components/employees/EmployeeForm';
+import { CreateEmployeePayload } from '../lib/api';
 
 describe('EmployeeForm', () => {
   const mockOnSubmit = jest.fn();
@@ -9,26 +10,26 @@ describe('EmployeeForm', () => {
     jest.clearAllMocks();
   });
 
-  it('renders all sections', () => {
+  it('renders all form sections', () => {
     render(<EmployeeForm onSubmit={mockOnSubmit} isSubmitting={false} />);
-    
     expect(screen.getByText('Personal Information')).toBeInTheDocument();
     expect(screen.getByText('Role & Organisation')).toBeInTheDocument();
     expect(screen.getByText('Compensation')).toBeInTheDocument();
+    expect(screen.getByText('Tax & Statutory')).toBeInTheDocument();
+    expect(screen.getByText('Payment Information')).toBeInTheDocument();
   });
 
-  it('shows validation errors when submitting empty form', async () => {
+  it('shows validation errors when required fields are empty', async () => {
     render(<EmployeeForm onSubmit={mockOnSubmit} isSubmitting={false} />);
     
-    const submitBtn = screen.getByRole('button', { name: 'Save' });
-    fireEvent.click(submitBtn);
-
+    // Submit the form
+    fireEvent.submit(screen.getByRole('button', { name: 'Save' }));
+    
+    // Wait for validation errors to appear
     await waitFor(() => {
-      // Multiple "Required" messages should appear
-      const requiredMessages = screen.getAllByText('Required');
-      expect(requiredMessages.length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Required').length).toBeGreaterThan(0);
     });
-
+    
     expect(mockOnSubmit).not.toHaveBeenCalled();
   });
 
@@ -36,47 +37,45 @@ describe('EmployeeForm', () => {
     const user = userEvent.setup();
     render(<EmployeeForm onSubmit={mockOnSubmit} isSubmitting={false} />);
 
+    // Fill personal info
     await user.type(screen.getByPlaceholderText('Alice'), 'John');
     await user.type(screen.getByPlaceholderText('Smith'), 'Doe');
-    await user.type(screen.getByPlaceholderText('alice@acmecorp.com'), 'john@example.com');
-    
-    // For selects, they don't have placeholders, but we can query by role 'combobox'
-    const selects = screen.getAllByRole('combobox');
-    // 0: department, 1: level, 2: type, 3: country
-    await user.selectOptions(selects[0], 'Engineering');
+    await user.type(screen.getByPlaceholderText('alice@acmecorp.com'), 'john.doe@example.com');
+
+    const dobInput = document.querySelector('input[name="dateOfBirth"]') as HTMLElement;
+    fireEvent.change(dobInput, { target: { value: '1990-01-01' } });
+
+    // Fill role
     await user.type(screen.getByPlaceholderText('Senior Software Engineer'), 'Developer');
-    await user.selectOptions(selects[1], 'Mid');
-    await user.selectOptions(selects[2], 'Full-time');
-    await user.selectOptions(selects[3], 'United States');
     
-    // date input (first date/number input)
-    const inputs = screen.getAllByRole('spinbutton');
-    // Wait, date is not a spinbutton
-    const dateInput = document.querySelector('input[type="date"]');
-    if (dateInput) fireEvent.change(dateInput, { target: { value: '2024-01-01' } });
+    const selects = document.querySelectorAll('select');
+    await user.selectOptions(selects[0], 'Engineering'); // department
+    await user.selectOptions(selects[1], 'Mid'); // jobLevel
+    await user.selectOptions(selects[2], 'Full-time'); // employmentType
+    await user.selectOptions(selects[3], 'United States'); // country
+    
+    const joinInput = document.querySelector('input[name="joiningDate"]') as HTMLElement;
+    fireEvent.change(joinInput, { target: { value: '2023-01-01' } });
 
-    await user.type(screen.getByPlaceholderText('95000'), '100000');
+    // Fill compensation
+    await user.type(screen.getByPlaceholderText('95000'), '80000');
 
-    const submitBtn = screen.getByRole('button', { name: 'Save' });
-    fireEvent.click(submitBtn);
+    // Submit form
+    fireEvent.submit(screen.getByRole('button', { name: 'Save' }));
 
     await waitFor(() => {
-      expect(mockOnSubmit).toHaveBeenCalledWith(
-        expect.objectContaining({
-          firstName: 'John',
-          lastName: 'Doe',
-          email: 'john@example.com',
-          department: 'Engineering',
-          baseSalary: 100000,
-        })
-      );
+      expect(mockOnSubmit).toHaveBeenCalledTimes(1);
     });
-  });
 
-  it('disables the submit button when isSubmitting is true', () => {
-    render(<EmployeeForm onSubmit={mockOnSubmit} isSubmitting={true} submitLabel="Saving..." />);
-    
-    const submitBtn = screen.getByRole('button', { name: 'Saving...' });
-    expect(submitBtn).toBeDisabled();
+    const submittedData = mockOnSubmit.mock.calls[0][0];
+    expect(submittedData.firstName).toBe('John');
+    expect(submittedData.lastName).toBe('Doe');
+    expect(submittedData.email).toBe('john.doe@example.com');
+    expect(submittedData.baseSalary).toBe(80000);
+  });
+  
+  it('disables submit button when isSubmitting is true', () => {
+    render(<EmployeeForm onSubmit={mockOnSubmit} isSubmitting={true} />);
+    expect(screen.getByRole('button', { name: 'Saving...' })).toBeDisabled();
   });
 });

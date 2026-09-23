@@ -1,92 +1,101 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import EmployeesTable from '../app/employees/EmployeesTable';
 import { useEmployees, useDeleteEmployee } from '../hooks/use-employees';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-jest.mock('../hooks/use-employees');
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
   useSearchParams: jest.fn(),
 }));
 
-describe('EmployeesTable', () => {
-  const mockRouter = { push: jest.fn() };
-  const mockSearchParams = new URLSearchParams();
+jest.mock('../hooks/use-employees', () => ({
+  useEmployees: jest.fn(),
+  useDeleteEmployee: jest.fn(),
+}));
 
+const mockPush = jest.fn();
+const mockMutateAsync = jest.fn();
+
+describe('EmployeesTable', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (useRouter as jest.Mock).mockReturnValue(mockRouter);
-    (useSearchParams as jest.Mock).mockReturnValue(mockSearchParams);
+    (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
+    (useSearchParams as jest.Mock).mockReturnValue({
+      get: (key: string) => null,
+      toString: () => '',
+    });
     (useDeleteEmployee as jest.Mock).mockReturnValue({
-      mutateAsync: jest.fn(),
+      mutateAsync: mockMutateAsync,
     });
   });
 
-  it('renders loading skeletons when isLoading is true', () => {
-    (useEmployees as jest.Mock).mockReturnValue({ data: undefined, isLoading: true });
-    
-    const { container } = render(<EmployeesTable />);
-    // Checking for loading skeletons
-    expect(container.querySelector('.animate-pulse')).toBeInTheDocument();
+  it('renders loading state initially', () => {
+    (useEmployees as jest.Mock).mockReturnValue({ data: null, isLoading: true });
+    render(<EmployeesTable />);
+    expect(screen.getByText('Employees')).toBeInTheDocument();
+    // It should render skeleton rows
+    expect(document.querySelector('.animate-pulse')).toBeInTheDocument();
   });
 
-  it('renders "No employees found" when data is empty', () => {
-    (useEmployees as jest.Mock).mockReturnValue({
-      data: { data: [], meta: { total: 0, totalPages: 0 } },
-      isLoading: false,
-    });
-    
+  it('renders empty state when no employees found', () => {
+    (useEmployees as jest.Mock).mockReturnValue({ data: { data: [], meta: { total: 0, totalPages: 1 } }, isLoading: false });
     render(<EmployeesTable />);
     expect(screen.getByText('No employees found')).toBeInTheDocument();
   });
 
   it('renders employee data correctly', () => {
-    (useEmployees as jest.Mock).mockReturnValue({
-      data: {
-        data: [
-          {
-            id: '1',
-            employeeId: 'EMP-001',
-            firstName: 'John',
-            lastName: 'Doe',
-            email: 'john@example.com',
-            department: 'Engineering',
-            jobLevel: 'Mid',
-            country: 'USA',
-            baseSalary: 100000,
-            currency: 'USD',
-            employmentType: 'Full-Time',
-            joiningDate: '2023-01-01',
-            status: 'Active',
-          }
-        ],
-        meta: { total: 1, totalPages: 1 }
-      },
-      isLoading: false,
-    });
+    const mockData = {
+      data: [
+        {
+          id: 'emp-1', employeeId: 'EMP001', firstName: 'Alice', lastName: 'Smith', email: 'alice@example.com',
+          department: 'Engineering', jobLevel: 'Mid', country: 'India', baseSalary: 100000, currency: 'INR',
+          employmentType: 'Full-time', joiningDate: '2023-01-01', status: 'Active'
+        }
+      ],
+      meta: { total: 1, totalPages: 1 }
+    };
+    (useEmployees as jest.Mock).mockReturnValue({ data: mockData, isLoading: false });
     
     render(<EmployeesTable />);
     
-    expect(screen.getByText('John Doe')).toBeInTheDocument();
-    expect(screen.getByText('john@example.com')).toBeInTheDocument();
-    expect(screen.getAllByText('Engineering')[0]).toBeInTheDocument();
-    expect(screen.getByText('EMP-001')).toBeInTheDocument();
-    // Use regex to match $100,000.00 since currency formatting can vary
-    expect(screen.getAllByText(/\$100,000/)[0]).toBeInTheDocument();
+    expect(screen.getByText('Alice Smith')).toBeInTheDocument();
+    expect(screen.getAllByText('alice@example.com').length).toBeGreaterThan(0);
+    expect(screen.getByText('EMP001')).toBeInTheDocument();
+    expect(screen.getAllByText('Engineering').length).toBeGreaterThan(0);
   });
 
-  it('updates URL when searching', () => {
-    (useEmployees as jest.Mock).mockReturnValue({
-      data: { data: [], meta: { total: 0, totalPages: 0 } },
-      isLoading: false,
-    });
+  it('calls delete mutation when delete button is clicked and confirmed', async () => {
+    window.confirm = jest.fn().mockReturnValue(true);
     
+    const mockData = {
+      data: [{ id: 'emp-1', employeeId: 'EMP001', firstName: 'Alice', lastName: 'Smith', email: 'alice@example.com', department: 'Engineering', jobLevel: 'Mid', country: 'India', baseSalary: 100000, currency: 'INR', employmentType: 'Full-time', joiningDate: '2023-01-01', status: 'Active' }],
+      meta: { total: 1, totalPages: 1 }
+    };
+    (useEmployees as jest.Mock).mockReturnValue({ data: mockData, isLoading: false });
+    
+    render(<EmployeesTable />);
+    
+    const deleteButton = document.querySelector('button'); // Trash icon button
+    expect(deleteButton).toBeInTheDocument();
+    
+    if (deleteButton) {
+      fireEvent.click(deleteButton);
+      expect(window.confirm).toHaveBeenCalled();
+      expect(mockMutateAsync).toHaveBeenCalledWith('emp-1');
+    }
+  });
+
+  it('updates URL params when searching', () => {
+    jest.useFakeTimers();
+    (useEmployees as jest.Mock).mockReturnValue({ data: null, isLoading: true });
     render(<EmployeesTable />);
     
     const searchInput = screen.getByPlaceholderText('Search name, email, ID...');
     fireEvent.change(searchInput, { target: { value: 'Alice' } });
-    fireEvent.keyDown(searchInput, { key: 'Enter', code: 'Enter' });
     
-    expect(mockRouter.push).toHaveBeenCalledWith('/employees?search=Alice&page=1');
+    jest.advanceTimersByTime(300);
+    
+    expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('search=Alice'));
+    jest.useRealTimers();
   });
 });

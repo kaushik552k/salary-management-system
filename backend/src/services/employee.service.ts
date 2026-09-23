@@ -95,6 +95,7 @@ export async function createEmployee(input: CreateEmployeeInput) {
       employeeId,
       currency,
       joiningDate: new Date(input.joiningDate),
+      dateOfBirth: input.dateOfBirth ? new Date(input.dateOfBirth) : null,
     },
   });
 }
@@ -124,6 +125,7 @@ export async function updateEmployee(id: string, input: UpdateEmployeeInput) {
       ...input,
       ...(currency && { currency }),
       ...(input.joiningDate && { joiningDate: new Date(input.joiningDate) }),
+      ...(input.dateOfBirth !== undefined && { dateOfBirth: input.dateOfBirth ? new Date(input.dateOfBirth) : null }),
     },
   });
 }

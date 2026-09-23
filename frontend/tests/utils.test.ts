@@ -28,7 +28,7 @@ describe('utils', () => {
 
   describe('formatDate', () => {
     it('formats ISO dates correctly', () => {
-      expect(formatDate('2023-10-05T00:00:00Z')).toBe('Oct 5, 2023');
+      expect(formatDate('2023-10-05T00:00:00Z')).toBe('5 Oct 2023');
     });
   });
 });

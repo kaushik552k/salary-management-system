@@ -231,6 +231,31 @@ async function seed() {
       // ~5% inactive employees
       const status = Math.random() < 0.05 ? 'Inactive' : 'Active';
 
+      // ── New fields ──────────────────────────────────────────────────────
+      const allowances = Math.round(baseSalary * (0.20 + Math.random() * 0.15)); // 20-35% of base
+      const epfPercent = country.name === 'India' ? 12 : 0;
+      const esiPercent = (country.name === 'India' && baseSalary < 25_000) ? 0.75 : 0;
+      const professionalTax = country.name === 'India' ? 200 : 0;
+      const tdsPercent = (() => {
+        const annualUSD = baseSalaryUSD;
+        if (annualUSD < 50_000) return 0;
+        if (annualUSD < 100_000) return 5;
+        if (annualUSD < 150_000) return 10;
+        if (annualUSD < 200_000) return 15;
+        if (annualUSD < 300_000) return 20;
+        return 30;
+      })();
+
+      // PAN: AAAAA0000A format
+      const panNumber = `${faker.string.alpha({ length: 5, casing: 'upper' })}${faker.string.numeric(4)}${faker.string.alpha({ length: 1, casing: 'upper' })}`;
+
+      // PF Account: AA/AAA/0000000/000/0000000
+      const pfAccountNumber = `${faker.string.alpha({ length: 2, casing: 'upper' })}/${faker.string.alpha({ length: 3, casing: 'upper' })}/${faker.string.numeric(7)}/${faker.string.numeric(3)}/${faker.string.numeric(7)}`;
+
+      const bankNames = ['HDFC Bank', 'ICICI Bank', 'SBI', 'Axis Bank', 'Kotak Mahindra', 'Yes Bank', 'Chase', 'Bank of America', 'Barclays', 'Deutsche Bank'];
+      const bankName = faker.helpers.arrayElement(bankNames);
+      const bankAccountNumber = `XXXX${faker.string.numeric(4)}`;
+
       data.push({
         employeeId: `EMP-${String(globalIndex).padStart(5, '0')}`,
         firstName,
@@ -246,6 +271,21 @@ async function seed() {
         bonus: bonus ?? null,
         joiningDate,
         status,
+        // New fields
+        dateOfBirth: faker.date.birthdate({ min: 25, max: 55, mode: 'age' }),
+        fatherName: faker.person.firstName('male') + ' ' + faker.person.lastName(),
+        panNumber,
+        mobile: `+91 ${faker.string.numeric(5)} ${faker.string.numeric(5)}`,
+        address: `${faker.location.streetAddress()}, ${faker.location.city()}, ${faker.location.state()} - ${faker.location.zipCode()}`,
+        pfAccountNumber,
+        epfPercent,
+        esiPercent,
+        professionalTax,
+        tdsPercent,
+        allowances,
+        bankName,
+        bankAccountNumber,
+        paymentMode: 'Bank Transfer',
       });
     }
 

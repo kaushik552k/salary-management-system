@@ -6,54 +6,25 @@ import {
   getByLevel,
   getDistribution,
   getByEmploymentType,
+  getPayrollTrend,
+  getPayrollComponents,
+  getComplianceStatus,
+  getRecentPayRuns,
 } from '../services/analytics.service';
 
 export const analyticsRouter = Router();
 
-analyticsRouter.get('/summary', async (_req: Request, res: Response, next: NextFunction) => {
-  try {
-    res.json(await getSummary());
-  } catch (err) {
-    next(err);
-  }
-});
+const wrap = (fn: Function) => async (req: Request, res: Response, next: NextFunction) => {
+  try { res.json(await fn()); } catch (err) { next(err); }
+};
 
-analyticsRouter.get('/by-department', async (_req: Request, res: Response, next: NextFunction) => {
-  try {
-    res.json(await getByDepartment());
-  } catch (err) {
-    next(err);
-  }
-});
-
-analyticsRouter.get('/by-country', async (_req: Request, res: Response, next: NextFunction) => {
-  try {
-    res.json(await getByCountry());
-  } catch (err) {
-    next(err);
-  }
-});
-
-analyticsRouter.get('/by-level', async (_req: Request, res: Response, next: NextFunction) => {
-  try {
-    res.json(await getByLevel());
-  } catch (err) {
-    next(err);
-  }
-});
-
-analyticsRouter.get('/distribution', async (_req: Request, res: Response, next: NextFunction) => {
-  try {
-    res.json(await getDistribution());
-  } catch (err) {
-    next(err);
-  }
-});
-
-analyticsRouter.get('/by-employment-type', async (_req: Request, res: Response, next: NextFunction) => {
-  try {
-    res.json(await getByEmploymentType());
-  } catch (err) {
-    next(err);
-  }
-});
+analyticsRouter.get('/summary', wrap(getSummary));
+analyticsRouter.get('/by-department', wrap(getByDepartment));
+analyticsRouter.get('/by-country', wrap(getByCountry));
+analyticsRouter.get('/by-level', wrap(getByLevel));
+analyticsRouter.get('/distribution', wrap(getDistribution));
+analyticsRouter.get('/by-employment-type', wrap(getByEmploymentType));
+analyticsRouter.get('/payroll-trend', wrap(getPayrollTrend));
+analyticsRouter.get('/payroll-components', wrap(getPayrollComponents));
+analyticsRouter.get('/compliance', wrap(getComplianceStatus));
+analyticsRouter.get('/recent-pay-runs', wrap(getRecentPayRuns));
