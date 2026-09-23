@@ -11,6 +11,7 @@ const DUMMY_NOTIFICATIONS = [
 
 export default function TopNavbar() {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -82,13 +83,55 @@ export default function TopNavbar() {
           )}
         </div>
 
-        <button className="p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors">
+        <button 
+          onClick={() => setShowSettings(true)}
+          className="p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors"
+        >
           <Settings className="w-5 h-5" />
         </button>
         <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold text-white cursor-pointer">
           HR
         </div>
       </div>
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                <Settings className="w-5 h-5 text-slate-400" />
+                Settings
+              </h3>
+              <button 
+                onClick={() => setShowSettings(false)}
+                className="p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-8 text-center space-y-4">
+              <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto">
+                <Clock className="w-8 h-8" />
+              </div>
+              <div>
+                <h4 className="text-base font-semibold text-slate-800 mb-1">Coming Soon</h4>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  The settings panel is currently under development. Check back later for customization options!
+                </p>
+              </div>
+            </div>
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+              <button 
+                onClick={() => setShowSettings(false)}
+                className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
