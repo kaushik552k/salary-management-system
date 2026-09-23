@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEmployees, useDeleteEmployee } from '@/hooks/use-employees';
 import {
@@ -101,6 +101,8 @@ export default function EmployeesTable() {
 
   const page = Number(searchParams.get('page') ?? 1);
   const search = searchParams.get('search') ?? '';
+  const [localSearch, setLocalSearch] = useState(search);
+  
   const department = searchParams.get('department') ?? '';
   const country = searchParams.get('country') ?? '';
   const jobLevel = searchParams.get('jobLevel') ?? '';
@@ -122,6 +124,19 @@ export default function EmployeesTable() {
     },
     [router, searchParams]
   );
+
+  useEffect(() => {
+    setLocalSearch(search);
+  }, [search]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localSearch !== search) {
+        updateParam('search', localSearch);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [localSearch, search, updateParam]);
 
   const handleSort = (col: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -182,11 +197,8 @@ export default function EmployeesTable() {
           <input
             type="text"
             placeholder="Search name, email, ID..."
-            defaultValue={search}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') updateParam('search', (e.target as HTMLInputElement).value);
-            }}
-            onChange={(e) => { if (!e.target.value) updateParam('search', ''); }}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100 shadow-sm"
           />
         </div>

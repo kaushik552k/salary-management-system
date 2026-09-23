@@ -86,13 +86,16 @@ describe('EmployeesTable', () => {
   });
 
   it('updates URL params when searching', () => {
+    jest.useFakeTimers();
     (useEmployees as jest.Mock).mockReturnValue({ data: null, isLoading: true });
     render(<EmployeesTable />);
     
     const searchInput = screen.getByPlaceholderText('Search name, email, ID...');
     fireEvent.change(searchInput, { target: { value: 'Alice' } });
-    fireEvent.keyDown(searchInput, { key: 'Enter', code: 'Enter' });
+    
+    jest.advanceTimersByTime(300);
     
     expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('search=Alice'));
+    jest.useRealTimers();
   });
 });
