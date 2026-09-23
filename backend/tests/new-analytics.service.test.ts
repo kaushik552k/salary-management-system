@@ -13,6 +13,7 @@ jest.mock('../src/lib/prisma', () => ({
     employee: {
       findMany: jest.fn(),
       count: jest.fn(),
+      groupBy: jest.fn(),
     },
   },
 }));
@@ -43,19 +44,19 @@ describe('New Analytics Services', () => {
 
   describe('getPayrollComponents', () => {
     it('returns 5 empty components when no employees exist', async () => {
-      (prisma.employee.findMany as jest.Mock).mockResolvedValue([]);
+      (prisma.employee.groupBy as jest.Mock).mockResolvedValue([]);
       const components = await getPayrollComponents();
       expect(components.length).toBe(5);
     });
 
     it('calculates components accurately', async () => {
-      const mockEmployees = [
+      const mockGroups = [
         {
-          baseSalary: 1000, allowances: 200, currency: 'USD',
+          _sum: { baseSalary: 1000, allowances: 200 }, _count: { _all: 1 }, currency: 'USD',
           epfPercent: 12, esiPercent: 0, professionalTax: 2, tdsPercent: 10
         }
       ];
-      (prisma.employee.findMany as jest.Mock).mockResolvedValue(mockEmployees);
+      (prisma.employee.groupBy as jest.Mock).mockResolvedValue(mockGroups);
       const components = await getPayrollComponents();
       expect(components.length).toBe(5);
       expect(components.map(c => c.component)).toEqual(['Basic Salary', 'Allowances', 'Employer EPF', 'Employer ESI', 'Other Components']);

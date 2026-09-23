@@ -86,18 +86,30 @@ export async function createEmployee(input: CreateEmployeeInput) {
     throw new AppError(409, `An employee with email '${input.email}' already exists`);
   }
 
-  const employeeId = await generateEmployeeId();
   const currency = CURRENCIES[input.country] ?? 'USD';
 
-  return prisma.employee.create({
-    data: {
-      ...input,
-      employeeId,
-      currency,
-      joiningDate: new Date(input.joiningDate),
-      dateOfBirth: input.dateOfBirth ? new Date(input.dateOfBirth) : null,
-    },
-  });
+  let retries = 3;
+  while (retries > 0) {
+    const employeeId = await generateEmployeeId();
+    try {
+      return await prisma.employee.create({
+        data: {
+          ...input,
+          employeeId,
+          currency,
+          joiningDate: new Date(input.joiningDate),
+          dateOfBirth: input.dateOfBirth ? new Date(input.dateOfBirth) : null,
+        },
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002' && (err.meta?.target as string[])?.includes('employeeId')) {
+        retries--;
+        if (retries === 0) throw new AppError(500, 'Failed to generate a unique Employee ID due to high concurrency. Please try again.');
+        continue;
+      }
+      throw err;
+    }
+  }
 }
 
 // ─── Update employee ─────────────────────────────────────────────────────────

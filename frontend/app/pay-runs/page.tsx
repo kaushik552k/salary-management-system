@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAnalyticsSummary, useRecentPayRuns, usePayrollComponents } from '@/hooks/use-analytics';
+import { useAnalyticsSummary, useRecentPayRuns, usePayrollComponents, usePayRunSummary } from '@/hooks/use-analytics';
 import { useEmployees } from '@/hooks/use-employees';
 import { formatINR, formatINRFull } from '@/lib/utils';
 import { Employee } from '@/lib/api';
@@ -23,6 +23,7 @@ function computePayroll(e: Employee) {
 
 export default function PayRunsPage() {
   const { data: summary } = useAnalyticsSummary();
+  const { data: payRunSummary } = usePayRunSummary();
   const { data: recentRuns } = useRecentPayRuns();
   const { data: components } = usePayrollComponents();
   const { data: employees, isLoading } = useEmployees({ status: 'Active', limit: 50 });
@@ -37,13 +38,12 @@ export default function PayRunsPage() {
   const empList: Employee[] = employees?.data ?? [];
   const payrollData = empList.map((e) => ({ ...e, ...computePayroll(e) }));
 
-  const totalGross = payrollData.reduce((s, e) => s + e.gross, 0);
-  const totalDeductions = payrollData.reduce((s, e) => s + e.totalDeductions, 0);
-  const totalTax = payrollData.reduce((s, e) => s + e.tds, 0);
-  const totalNet = payrollData.reduce((s, e) => s + e.netPay, 0);
-
+  // Accurate backend totals
+  const totalGrossINR = payRunSummary?.totalGrossINR ?? 0;
+  const totalDeductionsINR = payRunSummary?.totalDeductionsINR ?? 0;
+  const totalNetINR = payRunSummary?.totalNetINR ?? 0;
+  const avgNetINR = payRunSummary?.avgNetINR ?? 0;
   const totalMonthlyINR = summary?.monthlyPayrollINR ?? 0;
-  const avgNet = empList.length > 0 ? totalNet / empList.length : 0;
 
   return (
     <PageTransition className="p-4 sm:p-6 lg:p-8 space-y-6">
@@ -128,7 +128,7 @@ export default function PayRunsPage() {
             </div>
             <div>
               <p className="text-xs text-slate-400">Employees' Net Pay</p>
-              <p className="text-lg font-bold text-slate-900 tabular-nums">{formatINR(avgNet * (summary?.activeEmployees ?? 1))}</p>
+              <p className="text-lg font-bold text-slate-900 tabular-nums">{formatINR(totalNetINR)}</p>
             </div>
           </div>
         </div>
@@ -219,11 +219,11 @@ export default function PayRunsPage() {
               {!isLoading && payrollData.length > 0 && (
                 <tfoot className="bg-slate-50 border-t-2 border-slate-200">
                   <tr>
-                    <td className="px-5 py-3 text-xs font-bold text-slate-600 uppercase tracking-wide" colSpan={2}>Showing {empList.length} of {summary?.activeEmployees?.toLocaleString('en-IN')} employees</td>
-                    <td className="text-right px-4 py-3 font-bold text-slate-800 tabular-nums">{formatINRFull(totalGross)}</td>
-                    <td className="text-right px-4 py-3 font-bold text-slate-800 tabular-nums">{formatINRFull(totalDeductions)}</td>
-                    <td className="text-right px-4 py-3 font-bold text-slate-800 tabular-nums">{formatINRFull(totalTax)}</td>
-                    <td className="text-right px-4 py-3 font-bold text-indigo-700 tabular-nums">{formatINRFull(totalNet)}</td>
+                    <td className="px-5 py-3 text-xs font-bold text-slate-600 uppercase tracking-wide" colSpan={2}>Company Totals ({summary?.activeEmployees?.toLocaleString('en-IN')} employees)</td>
+                    <td className="text-right px-4 py-3 font-bold text-slate-800 tabular-nums">{formatINRFull(totalGrossINR)}</td>
+                    <td className="text-right px-4 py-3 font-bold text-slate-800 tabular-nums">{formatINRFull(totalDeductionsINR)}</td>
+                    <td className="text-right px-4 py-3 font-bold text-slate-800 tabular-nums"></td>
+                    <td className="text-right px-4 py-3 font-bold text-indigo-700 tabular-nums">{formatINRFull(totalNetINR)}</td>
                   </tr>
                 </tfoot>
               )}

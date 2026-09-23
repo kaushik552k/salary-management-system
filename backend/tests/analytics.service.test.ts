@@ -35,9 +35,9 @@ describe('Analytics Service', () => {
         .mockResolvedValueOnce(2) // active
         .mockResolvedValueOnce(3); // total
 
-      (mockPrisma.employee.findMany as jest.Mock).mockResolvedValueOnce([
-        { baseSalary: 100_000, bonus: 10_000, currency: 'USD' },
-        { baseSalary: 8_300_000, bonus: null, currency: 'INR' }, // ~100k USD
+      (mockPrisma.employee.groupBy as jest.Mock).mockResolvedValueOnce([
+        { currency: 'USD', _sum: { baseSalary: 100_000, bonus: 10_000 }, _max: { baseSalary: 100_000 }, _min: { baseSalary: 100_000 } },
+        { currency: 'INR', _sum: { baseSalary: 8_300_000, bonus: null }, _max: { baseSalary: 8_300_000 }, _min: { baseSalary: 8_300_000 } },
       ]);
 
       const result = await getSummary();
@@ -54,7 +54,7 @@ describe('Analytics Service', () => {
       (mockPrisma.employee.count as jest.Mock)
         .mockResolvedValueOnce(0)
         .mockResolvedValueOnce(0);
-      (mockPrisma.employee.findMany as jest.Mock).mockResolvedValueOnce([]);
+      (mockPrisma.employee.groupBy as jest.Mock).mockResolvedValueOnce([]);
 
       const result = await getSummary();
 
@@ -66,10 +66,9 @@ describe('Analytics Service', () => {
 
   describe('getByDepartment', () => {
     it('groups employees by department and calculates averages', async () => {
-      (mockPrisma.employee.findMany as jest.Mock).mockResolvedValueOnce([
-        { department: 'Engineering', baseSalary: 120_000, currency: 'USD' },
-        { department: 'Engineering', baseSalary: 100_000, currency: 'USD' },
-        { department: 'HR', baseSalary: 60_000, currency: 'USD' },
+      (mockPrisma.employee.groupBy as jest.Mock).mockResolvedValueOnce([
+        { department: 'Engineering', currency: 'USD', _sum: { baseSalary: 220_000 }, _count: { _all: 2 } },
+        { department: 'HR', currency: 'USD', _sum: { baseSalary: 60_000 }, _count: { _all: 1 } },
       ]);
 
       const result = await getByDepartment();
@@ -84,9 +83,9 @@ describe('Analytics Service', () => {
     });
 
     it('sorts results by average salary descending', async () => {
-      (mockPrisma.employee.findMany as jest.Mock).mockResolvedValueOnce([
-        { department: 'HR', baseSalary: 60_000, currency: 'USD' },
-        { department: 'Engineering', baseSalary: 120_000, currency: 'USD' },
+      (mockPrisma.employee.groupBy as jest.Mock).mockResolvedValueOnce([
+        { department: 'HR', currency: 'USD', _sum: { baseSalary: 60_000 }, _count: { _all: 1 } },
+        { department: 'Engineering', currency: 'USD', _sum: { baseSalary: 120_000 }, _count: { _all: 1 } },
       ]);
 
       const result = await getByDepartment();
@@ -97,10 +96,10 @@ describe('Analytics Service', () => {
 
   describe('getByLevel', () => {
     it('returns levels in correct career ladder order', async () => {
-      (mockPrisma.employee.findMany as jest.Mock).mockResolvedValueOnce([
-        { jobLevel: 'Senior', baseSalary: 120_000, currency: 'USD' },
-        { jobLevel: 'Junior', baseSalary: 60_000, currency: 'USD' },
-        { jobLevel: 'VP', baseSalary: 280_000, currency: 'USD' },
+      (mockPrisma.employee.groupBy as jest.Mock).mockResolvedValueOnce([
+        { jobLevel: 'Senior', currency: 'USD', _sum: { baseSalary: 120_000 }, _count: { _all: 1 } },
+        { jobLevel: 'Junior', currency: 'USD', _sum: { baseSalary: 60_000 }, _count: { _all: 1 } },
+        { jobLevel: 'VP', currency: 'USD', _sum: { baseSalary: 280_000 }, _count: { _all: 1 } },
       ]);
 
       const result = await getByLevel();

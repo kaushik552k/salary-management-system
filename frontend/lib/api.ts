@@ -173,6 +173,14 @@ export interface RecentPayRun {
   totalPayrollINR: number;
 }
 
+export interface PayRunSummary {
+  totalGrossINR: number;
+  totalDeductionsINR: number;
+  totalNetINR: number;
+  avgNetINR: number;
+  headcount: number;
+}
+
 // ─── HTTP helper ─────────────────────────────────────────────────────────────
 
 async function http<T>(path: string, options?: RequestInit): Promise<T> {
@@ -235,4 +243,5 @@ export const analyticsApi = {
   payrollComponents: () => http<PayrollComponent[]>('/analytics/payroll-components'),
   compliance: () => http<ComplianceItem[]>('/analytics/compliance'),
   recentPayRuns: () => http<RecentPayRun[]>('/analytics/recent-pay-runs'),
+  payRunSummary: () => http<PayRunSummary>('/analytics/pay-runs/summary'),
 };

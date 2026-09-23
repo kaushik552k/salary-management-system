@@ -15,30 +15,44 @@ function toINR(amount: number, currency: string): number {
 
 // ─── Summary KPIs ────────────────────────────────────────────────────────────
 export async function getSummary() {
-  const [activeCount, totalCount, employees] = await Promise.all([
+  const [activeCount, totalCount, currencyGroups] = await Promise.all([
     prisma.employee.count({ where: { status: 'Active' } }),
     prisma.employee.count(),
-    prisma.employee.findMany({
+    prisma.employee.groupBy({
+      by: ['currency'],
       where: { status: 'Active' },
-      select: { baseSalary: true, bonus: true, currency: true, allowances: true },
+      _sum: { baseSalary: true, bonus: true, allowances: true },
+      _max: { baseSalary: true },
+      _min: { baseSalary: true },
     }),
   ]);
 
-  const salariesInUSD = employees.map((e) => toUSD(e.baseSalary, e.currency));
-  const totalPayrollUSD = salariesInUSD.reduce((sum, s) => sum + s, 0);
-  const avgSalaryUSD = salariesInUSD.length > 0 ? totalPayrollUSD / salariesInUSD.length : 0;
-  const maxSalaryUSD = salariesInUSD.length > 0 ? Math.max(...salariesInUSD) : 0;
-  const minSalaryUSD = salariesInUSD.length > 0 ? Math.min(...salariesInUSD) : 0;
-  const totalBonusUSD = employees.reduce((sum, e) => sum + toUSD(e.bonus ?? 0, e.currency), 0);
+  let totalPayrollUSD = 0;
+  let totalBonusUSD = 0;
+  let totalPayrollINR = 0;
+  let maxSalaryUSD = 0;
+  let minSalaryUSD = Infinity;
 
-  // INR figures for dashboard
-  const grossSalariesINR = employees.map((e) =>
-    toINR(e.baseSalary + (e.allowances ?? 0), e.currency)
-  );
-  const totalPayrollINR = grossSalariesINR.reduce((sum, s) => sum + s, 0);
-  const avgSalaryINR = grossSalariesINR.length > 0 ? totalPayrollINR / grossSalariesINR.length : 0;
+  for (const group of currencyGroups) {
+    const sumBase = group._sum.baseSalary ?? 0;
+    const sumBonus = group._sum.bonus ?? 0;
+    const sumAllowances = group._sum.allowances ?? 0;
+    
+    totalPayrollUSD += toUSD(sumBase, group.currency);
+    totalBonusUSD += toUSD(sumBonus, group.currency);
+    totalPayrollINR += toINR(sumBase + sumAllowances, group.currency);
+    
+    const grpMaxUSD = toUSD(group._max.baseSalary ?? 0, group.currency);
+    const grpMinUSD = toUSD(group._min.baseSalary ?? 0, group.currency);
+    if (grpMaxUSD > maxSalaryUSD) maxSalaryUSD = grpMaxUSD;
+    if (grpMinUSD < minSalaryUSD && grpMinUSD > 0) minSalaryUSD = grpMinUSD;
+  }
+  
+  if (minSalaryUSD === Infinity) minSalaryUSD = 0;
 
-  // Next pay run = 1st of next month
+  const avgSalaryUSD = activeCount > 0 ? totalPayrollUSD / activeCount : 0;
+  const avgSalaryINR = activeCount > 0 ? totalPayrollINR / activeCount : 0;
+
   const now = new Date();
   const nextPayRun = new Date(now.getFullYear(), now.getMonth() + 1, 1);
   const daysToPayRun = Math.ceil((nextPayRun.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -51,31 +65,32 @@ export async function getSummary() {
     maxSalaryUSD: Math.round(maxSalaryUSD),
     minSalaryUSD: Math.round(minSalaryUSD),
     totalBonusUSD: Math.round(totalBonusUSD),
-    // INR figures
     totalPayrollINR: Math.round(totalPayrollINR),
     avgSalaryINR: Math.round(avgSalaryINR),
     monthlyPayrollINR: Math.round(totalPayrollINR / 12),
     nextPayRunDate: nextPayRun.toISOString().split('T')[0],
     daysToPayRun,
-    pendingApprovals: Math.floor(activeCount * 0.015), // simulated ~1.5%
+    pendingApprovals: Math.floor(activeCount * 0.015),
   };
 }
 
 // ─── Salary breakdown by department ─────────────────────────────────────────
 export async function getByDepartment() {
-  const employees = await prisma.employee.findMany({
+  const groups = await prisma.employee.groupBy({
+    by: ['department', 'currency'],
     where: { status: 'Active' },
-    select: { department: true, baseSalary: true, currency: true },
+    _sum: { baseSalary: true },
+    _count: { _all: true },
   });
 
-  const grouped: Record<string, { totalUSD: number; count: number }> = {};
-  for (const e of employees) {
-    if (!grouped[e.department]) grouped[e.department] = { totalUSD: 0, count: 0 };
-    grouped[e.department].totalUSD += toUSD(e.baseSalary, e.currency);
-    grouped[e.department].count += 1;
+  const merged: Record<string, { totalUSD: number; count: number }> = {};
+  for (const g of groups) {
+    if (!merged[g.department]) merged[g.department] = { totalUSD: 0, count: 0 };
+    merged[g.department].totalUSD += toUSD(g._sum.baseSalary ?? 0, g.currency);
+    merged[g.department].count += g._count._all;
   }
 
-  return Object.entries(grouped)
+  return Object.entries(merged)
     .map(([department, { totalUSD, count }]) => ({
       department,
       count,
@@ -87,19 +102,21 @@ export async function getByDepartment() {
 
 // ─── Salary breakdown by country ─────────────────────────────────────────────
 export async function getByCountry() {
-  const employees = await prisma.employee.findMany({
+  const groups = await prisma.employee.groupBy({
+    by: ['country', 'currency'],
     where: { status: 'Active' },
-    select: { country: true, currency: true, baseSalary: true },
+    _sum: { baseSalary: true },
+    _count: { _all: true },
   });
 
-  const grouped: Record<string, { totalUSD: number; count: number; currency: string }> = {};
-  for (const e of employees) {
-    if (!grouped[e.country]) grouped[e.country] = { totalUSD: 0, count: 0, currency: e.currency };
-    grouped[e.country].totalUSD += toUSD(e.baseSalary, e.currency);
-    grouped[e.country].count += 1;
+  const merged: Record<string, { totalUSD: number; count: number; currency: string }> = {};
+  for (const g of groups) {
+    if (!merged[g.country]) merged[g.country] = { totalUSD: 0, count: 0, currency: g.currency };
+    merged[g.country].totalUSD += toUSD(g._sum.baseSalary ?? 0, g.currency);
+    merged[g.country].count += g._count._all;
   }
 
-  return Object.entries(grouped)
+  return Object.entries(merged)
     .map(([country, { totalUSD, count, currency }]) => ({
       country, currency, count,
       totalPayrollUSD: Math.round(totalUSD),
@@ -110,23 +127,25 @@ export async function getByCountry() {
 
 // ─── Salary breakdown by job level ──────────────────────────────────────────
 export async function getByLevel() {
-  const employees = await prisma.employee.findMany({
+  const groups = await prisma.employee.groupBy({
+    by: ['jobLevel', 'currency'],
     where: { status: 'Active' },
-    select: { jobLevel: true, baseSalary: true, currency: true },
+    _sum: { baseSalary: true },
+    _count: { _all: true },
   });
 
   const LEVEL_ORDER = ['Junior', 'Mid', 'Senior', 'Lead', 'Principal', 'Director', 'VP'];
-  const grouped: Record<string, { totalUSD: number; count: number }> = {};
-  for (const e of employees) {
-    if (!grouped[e.jobLevel]) grouped[e.jobLevel] = { totalUSD: 0, count: 0 };
-    grouped[e.jobLevel].totalUSD += toUSD(e.baseSalary, e.currency);
-    grouped[e.jobLevel].count += 1;
+  const merged: Record<string, { totalUSD: number; count: number }> = {};
+  for (const g of groups) {
+    if (!merged[g.jobLevel]) merged[g.jobLevel] = { totalUSD: 0, count: 0 };
+    merged[g.jobLevel].totalUSD += toUSD(g._sum.baseSalary ?? 0, g.currency);
+    merged[g.jobLevel].count += g._count._all;
   }
 
-  return LEVEL_ORDER.filter((level) => grouped[level]).map((level) => ({
+  return LEVEL_ORDER.filter((level) => merged[level]).map((level) => ({
     level,
-    count: grouped[level].count,
-    avgSalaryUSD: Math.round(grouped[level].totalUSD / grouped[level].count),
+    count: merged[level].count,
+    avgSalaryUSD: Math.round(merged[level].totalUSD / merged[level].count),
   }));
 }
 
@@ -156,16 +175,13 @@ export async function getDistribution() {
 
 // ─── Employment type breakdown ───────────────────────────────────────────────
 export async function getByEmploymentType() {
-  const employees = await prisma.employee.findMany({
+  const groups = await prisma.employee.groupBy({
+    by: ['employmentType'],
     where: { status: 'Active' },
-    select: { employmentType: true },
+    _count: { _all: true },
   });
 
-  const grouped: Record<string, number> = {};
-  for (const e of employees) {
-    grouped[e.employmentType] = (grouped[e.employmentType] ?? 0) + 1;
-  }
-  return Object.entries(grouped).map(([type, count]) => ({ type, count }));
+  return groups.map((g) => ({ type: g.employmentType, count: g._count._all }));
 }
 
 // ─── Payroll Trend (last 6 months) ──────────────────────────────────────────
@@ -214,23 +230,24 @@ export async function getPayrollTrend() {
 
 // ─── Payroll Components Breakdown ─────────────────────────────────────────────
 export async function getPayrollComponents() {
-  const employees = await prisma.employee.findMany({
+  const groups = await prisma.employee.groupBy({
+    by: ['currency', 'epfPercent', 'esiPercent', 'professionalTax'],
     where: { status: 'Active' },
-    select: {
-      baseSalary: true, currency: true, allowances: true,
-      epfPercent: true, esiPercent: true, professionalTax: true,
-    },
+    _sum: { baseSalary: true, allowances: true },
+    _count: { _all: true },
   });
 
   let basicINR = 0, allowancesINR = 0, epfINR = 0, esiINR = 0, otherINR = 0;
 
-  for (const e of employees) {
-    const basic = toINR(e.baseSalary / 12, e.currency);
-    const allowance = toINR((e.allowances ?? 0) / 12, e.currency);
+  for (const g of groups) {
+    const sumBase = g._sum.baseSalary ?? 0;
+    const sumAllow = g._sum.allowances ?? 0;
+    const basic = toINR(sumBase / 12, g.currency);
+    const allowance = toINR(sumAllow / 12, g.currency);
     const gross = basic + allowance;
-    const epf = basic * ((e.epfPercent ?? 12) / 100);
-    const esi = gross * ((e.esiPercent ?? 0.75) / 100);
-    const other = toINR((e.professionalTax ?? 200), e.currency);
+    const epf = basic * ((g.epfPercent ?? 12) / 100);
+    const esi = gross * ((g.esiPercent ?? 0.75) / 100);
+    const other = toINR((g.professionalTax ?? 200) * g._count._all, g.currency);
 
     basicINR += basic;
     allowancesINR += allowance;
@@ -291,4 +308,52 @@ export async function getRecentPayRuns() {
     });
   }
   return runs;
+}
+
+// ─── Pay Run Summary (Accurate Financials) ──────────────────────────────────
+export async function getPayRunSummary() {
+  const groups = await prisma.employee.groupBy({
+    by: ['currency', 'epfPercent', 'esiPercent', 'professionalTax', 'tdsPercent'],
+    where: { status: 'Active' },
+    _sum: { baseSalary: true, allowances: true },
+    _count: { _all: true },
+  });
+
+  let totalGrossINR = 0;
+  let totalDeductionsINR = 0;
+  let totalNetINR = 0;
+  let headcount = 0;
+
+  for (const g of groups) {
+    const sumBase = g._sum.baseSalary ?? 0;
+    const sumAllow = g._sum.allowances ?? 0;
+    const count = g._count._all;
+    
+    const basic = toINR(sumBase / 12, g.currency);
+    const allowance = toINR(sumAllow / 12, g.currency);
+    const gross = basic + allowance;
+    
+    const epf = basic * ((g.epfPercent ?? 12) / 100);
+    const esi = gross * ((g.esiPercent ?? 0.75) / 100);
+    const pt = toINR((g.professionalTax ?? 200) * count, g.currency);
+    const tds = gross * ((g.tdsPercent ?? 10) / 100);
+    
+    const deductions = epf + esi + pt + tds;
+    const net = gross - deductions;
+
+    totalGrossINR += gross;
+    totalDeductionsINR += deductions;
+    totalNetINR += net;
+    headcount += count;
+  }
+
+  const avgNetINR = headcount > 0 ? totalNetINR / headcount : 0;
+
+  return {
+    totalGrossINR: Math.round(totalGrossINR),
+    totalDeductionsINR: Math.round(totalDeductionsINR),
+    totalNetINR: Math.round(totalNetINR),
+    avgNetINR: Math.round(avgNetINR),
+    headcount,
+  };
 }

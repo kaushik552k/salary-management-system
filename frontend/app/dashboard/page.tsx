@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import {
   useAnalyticsSummary, useByDepartment, useByLevel, useByEmploymentType,
   usePayrollTrend, usePayrollComponents, useCompliance, useRecentPayRuns,
@@ -58,8 +59,12 @@ export default function DashboardPage() {
   const { data: compliance } = useCompliance();
   const { data: recentRuns } = useRecentPayRuns();
 
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const [greeting, setGreeting] = useState('Welcome');
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    setGreeting(hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening');
+  }, []);
 
   const nextPayDate = summary?.nextPayRunDate
     ? formatDateLong(summary.nextPayRunDate)

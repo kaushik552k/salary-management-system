@@ -10,6 +10,7 @@ import {
   getPayrollComponents,
   getComplianceStatus,
   getRecentPayRuns,
+  getPayRunSummary,
 } from '../services/analytics.service';
 
 export const analyticsRouter = Router();
@@ -28,3 +29,4 @@ analyticsRouter.get('/payroll-trend', wrap(getPayrollTrend));
 analyticsRouter.get('/payroll-components', wrap(getPayrollComponents));
 analyticsRouter.get('/compliance', wrap(getComplianceStatus));
 analyticsRouter.get('/recent-pay-runs', wrap(getRecentPayRuns));
+analyticsRouter.get('/pay-runs/summary', wrap(getPayRunSummary));

@@ -3,6 +3,7 @@
   "testEnvironment": "node",
   "roots": ["<rootDir>/tests"],
   "testMatch": ["**/*.test.ts"],
+  "setupFilesAfterEnv": ["<rootDir>/tests/setup.ts"],
   "moduleFileExtensions": ["ts", "js", "json"],
   "transform": {
     "^.+\\.ts$": ["ts-jest", {

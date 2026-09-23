@@ -30,3 +30,6 @@ export const useCompliance = () =>
 
 export const useRecentPayRuns = () =>
   useQuery({ queryKey: ['analytics', 'recentPayRuns'], queryFn: analyticsApi.recentPayRuns, staleTime: 60_000 });
+
+export const usePayRunSummary = () =>
+  useQuery({ queryKey: ['analytics', 'payRunSummary'], queryFn: analyticsApi.payRunSummary, staleTime: 60_000 });
