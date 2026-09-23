@@ -23,7 +23,7 @@ function KpiCard({ title, value, sub, badge, accent, icon, loading }: {
   loading?: boolean;
 }) {
   return (
-    <div className={`bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow`}>
+    <div data-testid="kpicard" className={`bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow`}>
       <div className={`w-10 h-10 rounded-xl ${accent} flex items-center justify-center mb-3`}>
         {icon}
       </div>
