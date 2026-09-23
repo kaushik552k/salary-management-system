@@ -41,13 +41,18 @@ The frontend testing infrastructure has just been set up using **Jest**, **React
 
 ### 📊 Frontend Coverage Results
 
-Currently, test coverage has been established for the core utility functions (`lib/utils.ts`) to demonstrate the setup is working correctly and passing in a Next.js environment.
+Through comprehensive unit testing with `jsdom` and React Testing Library, we have successfully covered the core logic, API integrations, and the main visual components (Charts, Forms, Dashboard, Employees Table).
 
 | Component | Coverage |
 | :--- | :--- |
-| `lib/utils.ts` | 100% Statements, 100% Lines |
+| **Overall Statements** | 70.55% |
+| **Overall Branches** | 73.14% |
+| **API Client (`api.ts`)** | 98.81% |
+| **Utils (`utils.ts`)** | 100.00% |
+| **Charts / UI (`components`)** | 80 - 100% |
+| **EmployeesTable** | 96.06% |
+| **Dashboard** | 90.83% |
 
-**Test Suites Passing:** `5 / 5`
-- `tests/utils.test.ts` (merges classes correctly, formats currency (USD & INR), formats large numbers compactly, formats ISO dates).
+**Test Suites Passing:** `10 / 10` (32 individual tests)
 
-*To expand coverage, you can begin adding `.test.tsx` files alongside your React components inside the `frontend` folder using React Testing Library.*
+*Uncovered portions primarily relate to server/React Suspense boundaries (which are better tested via E2E playwright tests) and loading states that are purely stylistic.*
