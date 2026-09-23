@@ -53,7 +53,7 @@ export const CURRENCIES: Record<string, string> = {
   Japan: 'JPY',
 };
 
-// Fixed exchange rates to USD (for analytics normalization)
+// Fixed exchange rates to USD (kept for backward-compat in tests)
 export const USD_EXCHANGE_RATES: Record<string, number> = {
   USD: 1,
   INR: 0.012,
@@ -65,6 +65,21 @@ export const USD_EXCHANGE_RATES: Record<string, number> = {
   BRL: 0.20,
   JPY: 0.0067,
 };
+
+// Fixed exchange rates to INR (for analytics)
+export const INR_EXCHANGE_RATES: Record<string, number> = {
+  USD: 83.5,
+  INR: 1,
+  GBP: 106.8,
+  EUR: 91.2,
+  CAD: 61.5,
+  AUD: 54.8,
+  SGD: 62.3,
+  BRL: 16.9,
+  JPY: 0.56,
+};
+
+export const PAYMENT_MODES = ['Bank Transfer', 'Cash', 'Cheque'] as const;
 
 // ─── Zod Schemas ────────────────────────────────────────────────────────────
 
@@ -81,6 +96,28 @@ export const createEmployeeSchema = z.object({
   bonus: z.number().nonnegative().optional(),
   joiningDate: z.string().datetime({ offset: true }).or(z.string().date()),
   status: z.enum(STATUSES).optional().default('Active'),
+
+  // Personal info (all optional)
+  dateOfBirth: z.string().optional().nullable(),
+  fatherName: z.string().optional().nullable(),
+  panNumber: z.string().optional().nullable(),
+  mobile: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+
+  // Statutory (optional, with defaults)
+  pfAccountNumber: z.string().optional().nullable(),
+  epfPercent: z.number().min(0).max(100).optional(),
+  esiPercent: z.number().min(0).max(100).optional(),
+  professionalTax: z.number().min(0).optional(),
+  tdsPercent: z.number().min(0).max(100).optional(),
+
+  // Allowances
+  allowances: z.number().min(0).optional(),
+
+  // Bank / payment
+  bankName: z.string().optional().nullable(),
+  bankAccountNumber: z.string().optional().nullable(),
+  paymentMode: z.enum(PAYMENT_MODES).optional(),
 });
 
 export const updateEmployeeSchema = createEmployeeSchema.partial();

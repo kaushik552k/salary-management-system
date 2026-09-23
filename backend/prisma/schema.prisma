@@ -26,8 +26,31 @@ model Employee {
   bonus          Float?
   joiningDate    DateTime
   status         String   @default("Active")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+
+  // Personal Information
+  dateOfBirth      DateTime?
+  fatherName       String?
+  panNumber        String?
+  mobile           String?
+  address          String?
+
+  // PF / Statutory
+  pfAccountNumber  String?
+  epfPercent       Float    @default(12)
+  esiPercent       Float    @default(0.75)
+  professionalTax  Float    @default(200)
+  tdsPercent       Float    @default(10)
+
+  // Allowances (HRA + other)
+  allowances       Float    @default(0)
+
+  // Payment / Bank
+  bankName         String?
+  bankAccountNumber String?
+  paymentMode      String   @default("Bank Transfer")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([department])
   @@index([country])

@@ -9,6 +9,7 @@ export type Department =
 export type JobLevel = 'Junior' | 'Mid' | 'Senior' | 'Lead' | 'Principal' | 'Director' | 'VP';
 export type EmploymentType = 'Full-time' | 'Part-time' | 'Contract';
 export type EmployeeStatus = 'Active' | 'Inactive';
+export type PaymentMode = 'Bank Transfer' | 'Cash' | 'Cheque';
 
 export interface Employee {
   id: string;
@@ -28,6 +29,21 @@ export interface Employee {
   status: EmployeeStatus;
   createdAt: string;
   updatedAt: string;
+  // New fields
+  dateOfBirth?: string | null;
+  fatherName?: string | null;
+  panNumber?: string | null;
+  mobile?: string | null;
+  address?: string | null;
+  pfAccountNumber?: string | null;
+  epfPercent?: number;
+  esiPercent?: number;
+  professionalTax?: number;
+  tdsPercent?: number;
+  allowances?: number;
+  bankName?: string | null;
+  bankAccountNumber?: string | null;
+  paymentMode?: PaymentMode;
 }
 
 export interface PaginatedResponse<T> {
@@ -66,6 +82,21 @@ export interface CreateEmployeePayload {
   bonus?: number;
   joiningDate: string;
   status?: EmployeeStatus;
+  // New optional fields
+  dateOfBirth?: string;
+  fatherName?: string;
+  panNumber?: string;
+  mobile?: string;
+  address?: string;
+  pfAccountNumber?: string;
+  epfPercent?: number;
+  esiPercent?: number;
+  professionalTax?: number;
+  tdsPercent?: number;
+  allowances?: number;
+  bankName?: string;
+  bankAccountNumber?: string;
+  paymentMode?: PaymentMode;
 }
 
 // Analytics types
@@ -77,6 +108,12 @@ export interface AnalyticsSummary {
   maxSalaryUSD: number;
   minSalaryUSD: number;
   totalBonusUSD: number;
+  totalPayrollINR: number;
+  avgSalaryINR: number;
+  monthlyPayrollINR: number;
+  nextPayRunDate: string;
+  daysToPayRun: number;
+  pendingApprovals: number;
 }
 
 export interface DeptBreakdown {
@@ -110,6 +147,32 @@ export interface EmploymentTypeBreakdown {
   count: number;
 }
 
+export interface PayrollTrendPoint {
+  month: string;
+  totalPayrollINR: number;
+  headcount: number;
+}
+
+export interface PayrollComponent {
+  component: string;
+  amountINR: number;
+  percentage: number;
+}
+
+export interface ComplianceItem {
+  item: string;
+  status: string;
+  details: string;
+}
+
+export interface RecentPayRun {
+  period: string;
+  payDate: string;
+  status: string;
+  headcount: number;
+  totalPayrollINR: number;
+}
+
 // ─── HTTP helper ─────────────────────────────────────────────────────────────
 
 async function http<T>(path: string, options?: RequestInit): Promise<T> {
@@ -123,9 +186,7 @@ async function http<T>(path: string, options?: RequestInit): Promise<T> {
     throw new Error(body?.error ?? `HTTP ${res.status}`);
   }
 
-  // 204 No Content
   if (res.status === 204) return undefined as T;
-
   return res.json();
 }
 
@@ -166,4 +227,8 @@ export const analyticsApi = {
   byLevel: () => http<LevelBreakdown[]>('/analytics/by-level'),
   distribution: () => http<DistributionBucket[]>('/analytics/distribution'),
   byEmploymentType: () => http<EmploymentTypeBreakdown[]>('/analytics/by-employment-type'),
+  payrollTrend: () => http<PayrollTrendPoint[]>('/analytics/payroll-trend'),
+  payrollComponents: () => http<PayrollComponent[]>('/analytics/payroll-components'),
+  compliance: () => http<ComplianceItem[]>('/analytics/compliance'),
+  recentPayRuns: () => http<RecentPayRun[]>('/analytics/recent-pay-runs'),
 };
