@@ -1,0 +1,21 @@
+{
+  "preset": "ts-jest",
+  "testEnvironment": "node",
+  "roots": ["<rootDir>/tests"],
+  "testMatch": ["**/*.test.ts"],
+  "moduleFileExtensions": ["ts", "js", "json"],
+  "transform": {
+    "^.+\\.ts$": ["ts-jest", {
+      "tsconfig": {
+        "module": "commonjs",
+        "esModuleInterop": true
+      }
+    }]
+  },
+  "verbose": true,
+  "collectCoverageFrom": [
+    "src/**/*.ts",
+    "!src/scripts/**",
+    "!src/index.ts"
+  ]
+}
