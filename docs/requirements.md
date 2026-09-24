@@ -32,7 +32,7 @@ Replace ACME Corp's Excel-based salary management process with a web application
 | **Employee Directory** | Paginated, searchable, sortable table of all employees |
 | **Filtering** | Filter by department, country, job level, employment type, status |
 | **Salary CRUD** | Create, view, edit, and deactivate employee salary records |
-| **Multi-Currency** | Each employee carries their local currency; analytics normalise to USD |
+| **Multi-Currency** | True multi-currency with normalization. Each employee carries their local base salary and currency code. Analytics layer normalizes all values to USD on the fly for company-wide reporting. |
 | **Analytics Dashboard** | KPI cards + charts: salary by dept, by country, by level, pay distribution histogram, employment type breakdown |
 | **CSV Export** | Download the currently filtered employee set as a CSV |
 | **Data Seeding** | Seed script generating 10,000 realistic employees across 10 countries |
@@ -48,7 +48,8 @@ Replace ACME Corp's Excel-based salary management process with a web application
 | **Tax Calculations** | Country-specific legal complexity; requires live country-law data. Out of scope. |
 | **Benefits / PTO Management** | A different HR product area, not salary management. |
 | **Real-Time Salary History / Audit Log** | Nice-to-have; adds DB complexity. Excluded for this version. |
-| **Live FX Rates** | Fixed exchange rates are sufficient for analytics; live rates require a paid API and add a runtime dependency. Rates are clearly documented as approximate. |
+| **Historical FX Fluctuations** | Analytics normalize currencies using a single point-in-time exchange rate table. We are deliberately NOT handling historical exchange rate fluctuations or storing historical normalized USD values, as this would require a highly complex ledger data model which is overkill for a v1 HR dashboard. |
+| **Live FX Rates API** | Fixed exchange rates are sufficient for approximate analytics. We deliberately exclude live FX APIs to avoid paid runtime dependencies and potential dashboard failure modes if the API goes down. |
 | **Email Notifications** | No notification requirements stated. |
 | **Mobile App** | The HR Manager works at a desktop — a responsive web app is sufficient. |
 

@@ -48,7 +48,7 @@ export default function TopNavbar({ onMenuClick }: { onMenuClick?: () => void })
           </button>
           
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50">
+            <div className="fixed sm:absolute inset-x-2 sm:inset-x-auto top-[3.75rem] sm:top-auto sm:right-0 sm:mt-2 sm:w-80 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50">
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/50">
                 <h3 className="text-sm font-semibold text-slate-800">Notifications</h3>
                 <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{DUMMY_NOTIFICATIONS.length} New</span>
