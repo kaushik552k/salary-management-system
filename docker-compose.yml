@@ -20,6 +20,8 @@ services:
       - DATABASE_URL=postgresql://postgres:secretpassword@db:5432/salary_db?schema=public
       - PORT=3001
       - FRONTEND_URL=https://assignment.kaushikcodes.in
+      - EXCHANGE_RATES_USD={"USD":1,"INR":0.012,"GBP":1.27,"EUR":1.09,"CAD":0.74,"AUD":0.65,"SGD":0.75,"BRL":0.20,"JPY":0.0067}
+      - EXCHANGE_RATES_INR={"USD":83.5,"INR":1,"GBP":106.8,"EUR":91.2,"CAD":61.5,"AUD":54.8,"SGD":62.3,"BRL":16.9,"JPY":0.56}
     restart: always
     depends_on:
       - db

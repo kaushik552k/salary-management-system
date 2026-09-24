@@ -11,18 +11,17 @@
 
 ---
 
-## 2. Fixed Exchange Rates over Live FX API
+## 2. Multi-Currency Handling
 
-**Chose**: Hard-coded exchange rates in `employee.schema.ts`  
-**Alternative**: Live FX API (e.g., Open Exchange Rates, Fixer.io)
+**Chose**: True multi-currency with on-the-fly normalization to USD  
+**Alternative**: Single base currency (storing all salaries in USD) OR Full Historical Ledger
 
-**Reasoning**: 
-- No runtime API dependency or API key management
-- No failure mode (a live FX call failing would break the analytics dashboard)
-- Salary analytics are approximate anyway — a 2-3% rate drift doesn't change business decisions
-- Rates are documented clearly in code and in requirements
+**Reasoning**:
+- **Data Model Complexity vs Reality**: Employees are paid in local currencies in reality (e.g., INR in India, EUR in Germany). A "Single Base Currency" approach (converting to USD at creation time and storing only USD) loses the source of truth and would make editing the salary difficult for local HR reps. Storing local currency + amount preserves the true business data without needing a complex multi-ledger model.
+- **Exchange Rate Sourcing/Staleness**: We normalize to USD in the analytics layer using fixed, hard-coded exchange rates (`employee.schema.ts`). We deliberately chose this over a Live FX API to avoid runtime dependencies, API key management, and failure modes that could break the dashboard.
+- **Analytics Accuracy vs Historical Fluctuations**: Our analytics are "point-in-time approximate". We deliberately chose *not* to handle historical exchange rate fluctuations. Tracking exact historical USD value for every pay run would require a complex time-series ledger. For the purpose of high-level HR reporting and trend analysis, a static normalization rate is sufficient.
 
-**Trade-off**: Analytics USD figures will drift from reality as exchange rates change. This is explicitly documented.
+**Trade-off**: Analytics USD figures will drift from exact real-time financial reality, and historical trend charts use today's exchange rates rather than the historical rates for past dates. This is explicitly documented and accepted for this version's scope.
 
 ---
 

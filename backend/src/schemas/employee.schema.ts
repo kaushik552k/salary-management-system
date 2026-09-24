@@ -53,8 +53,7 @@ export const CURRENCIES: Record<string, string> = {
   Japan: 'JPY',
 };
 
-// Fixed exchange rates to USD (kept for backward-compat in tests)
-export const USD_EXCHANGE_RATES: Record<string, number> = {
+const defaultUsdRates: Record<string, number> = {
   USD: 1,
   INR: 0.012,
   GBP: 1.27,
@@ -66,8 +65,19 @@ export const USD_EXCHANGE_RATES: Record<string, number> = {
   JPY: 0.0067,
 };
 
-// Fixed exchange rates to INR (for analytics)
-export const INR_EXCHANGE_RATES: Record<string, number> = {
+// Fixed exchange rates to USD (kept for backward-compat in tests or fallback)
+export const USD_EXCHANGE_RATES: Record<string, number> = (() => {
+  if (process.env.EXCHANGE_RATES_USD) {
+    try {
+      return JSON.parse(process.env.EXCHANGE_RATES_USD);
+    } catch (e) {
+      console.warn('Failed to parse EXCHANGE_RATES_USD env var, using defaults');
+    }
+  }
+  return defaultUsdRates;
+})();
+
+const defaultInrRates: Record<string, number> = {
   USD: 83.5,
   INR: 1,
   GBP: 106.8,
@@ -78,6 +88,18 @@ export const INR_EXCHANGE_RATES: Record<string, number> = {
   BRL: 16.9,
   JPY: 0.56,
 };
+
+// Fixed exchange rates to INR (for analytics)
+export const INR_EXCHANGE_RATES: Record<string, number> = (() => {
+  if (process.env.EXCHANGE_RATES_INR) {
+    try {
+      return JSON.parse(process.env.EXCHANGE_RATES_INR);
+    } catch (e) {
+      console.warn('Failed to parse EXCHANGE_RATES_INR env var, using defaults');
+    }
+  }
+  return defaultInrRates;
+})();
 
 export const PAYMENT_MODES = ['Bank Transfer', 'Cash', 'Cheque'] as const;
 

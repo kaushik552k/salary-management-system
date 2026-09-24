@@ -4,7 +4,8 @@ This document captures how AI tools were used during the development of this ass
 
 ## Tools Used
 
-- **Antigravity IDE (Google DeepMind)** — Agentic AI coding assistant used throughout
+- **Antigravity IDE (Google DeepMind)** — Used for planning, documenting, implementation process
+- **OpenCode (AI Coding Agent)** — Agentic AI coding assistant used throughout
 
 ---
 
