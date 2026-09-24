@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useEmployee, useDeleteEmployee } from '@/hooks/use-employees';
-import { formatDate, formatINRFull, STATUS_COLORS, LEVEL_COLORS, cn } from '@/lib/utils';
+import { formatDate, formatCurrency, STATUS_COLORS, LEVEL_COLORS, cn } from '@/lib/utils';
 import {
   ArrowLeft, Pencil, Trash2, Mail, Calendar, Building2, MapPin,
   CreditCard, User, ShieldCheck, Banknote,
@@ -233,17 +233,17 @@ export default function EmployeeDetailPage() {
       {activeTab === 'Salary Details' && (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
           <Section title="Compensation" icon={<Banknote className="w-4 h-4 text-slate-400" />}>
-            <InfoRow label="Base Salary" value={`${employee.currency} ${employee.baseSalary.toLocaleString('en-IN')}`} />
-            <InfoRow label="Allowances" value={employee.allowances ? `${employee.currency} ${employee.allowances.toLocaleString('en-IN')}` : '₹0'} />
-            <InfoRow label="Bonus" value={employee.bonus ? `${employee.currency} ${employee.bonus.toLocaleString('en-IN')}` : 'None'} />
-            <InfoRow label="Gross Salary" value={`${employee.currency} ${(employee.baseSalary + (employee.allowances ?? 0)).toLocaleString('en-IN')}`} />
+            <InfoRow label="Base Salary" value={formatCurrency(employee.baseSalary, employee.currency)} />
+            <InfoRow label="Allowances" value={employee.allowances ? formatCurrency(employee.allowances, employee.currency) : formatCurrency(0, employee.currency)} />
+            <InfoRow label="Bonus" value={employee.bonus ? formatCurrency(employee.bonus, employee.currency) : 'None'} />
+            <InfoRow label="Gross Salary" value={formatCurrency(employee.baseSalary + (employee.allowances ?? 0), employee.currency)} />
             <InfoRow label="Employment Type" value={employee.employmentType} />
           </Section>
 
           <Section title="Deductions" icon={<ShieldCheck className="w-4 h-4 text-slate-400" />}>
             <InfoRow label="EPF %" value={`${employee.epfPercent ?? 12}%`} />
             <InfoRow label="ESI %" value={`${employee.esiPercent ?? 0.75}%`} />
-            <InfoRow label="Professional Tax" value={formatINRFull(employee.professionalTax ?? 0) + ' / month'} />
+            <InfoRow label="Professional Tax" value={formatCurrency(employee.professionalTax ?? 0, employee.currency) + ' / month'} />
             <InfoRow label="TDS %" value={`${employee.tdsPercent ?? 10}%`} />
           </Section>
 
@@ -252,10 +252,10 @@ export default function EmployeeDetailPage() {
             <h3 className="text-sm font-semibold text-indigo-800 mb-4">Monthly Payslip Summary</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: 'Gross Pay', value: formatINRFull(gross), color: 'text-slate-800' },
-                { label: 'EPF + ESI', value: formatINRFull(epf + esi), color: 'text-rose-600' },
-                { label: 'TDS', value: formatINRFull(tds), color: 'text-rose-600' },
-                { label: 'Net Pay', value: formatINRFull(netPay), color: 'text-emerald-700 text-xl font-bold' },
+                { label: 'Gross Pay', value: formatCurrency(gross, employee.currency), color: 'text-slate-800' },
+                { label: 'EPF + ESI', value: formatCurrency(epf + esi, employee.currency), color: 'text-rose-600' },
+                { label: 'TDS', value: formatCurrency(tds, employee.currency), color: 'text-rose-600' },
+                { label: 'Net Pay', value: formatCurrency(netPay, employee.currency), color: 'text-emerald-700 text-xl font-bold' },
               ].map(({ label, value, color }) => (
                 <div key={label}>
                   <p className="text-xs text-slate-500 uppercase tracking-wide">{label}</p>

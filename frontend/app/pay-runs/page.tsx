@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useAnalyticsSummary, useRecentPayRuns, usePayrollComponents, usePayRunSummary } from '@/hooks/use-analytics';
 import { useEmployees } from '@/hooks/use-employees';
-import { formatINR, formatINRFull } from '@/lib/utils';
+import { formatCurrency, formatUSD } from '@/lib/utils';
 import { Employee } from '@/lib/api';
-import { Download, CalendarClock, Users, Wallet, BadgeCheck, X, AlertCircle } from 'lucide-react';
+import { Globe, Download, CalendarClock, Users, Wallet, BadgeCheck, X, AlertCircle } from 'lucide-react';
 import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/animations';
 
 function computePayroll(e: Employee) {
@@ -15,17 +15,19 @@ function computePayroll(e: Employee) {
   const epf = monthly * ((e.epfPercent ?? 0) / 100);
   const esi = gross * ((e.esiPercent ?? 0) / 100);
   const pt = (e.professionalTax ?? 0);
-  const tds = monthly * ((e.tdsPercent ?? 0) / 100);
-  const totalDeductions = epf + esi + pt;
-  const netPay = gross - epf - esi - pt - tds;
+  const tds = gross * ((e.tdsPercent ?? 0) / 100);
+  const totalDeductions = epf + esi + pt + tds;
+  const netPay = gross - totalDeductions;
   return { gross, epf, esi, pt, tds, totalDeductions, netPay, paidDays: 30 };
 }
 
 export default function PayRunsPage() {
-  const { data: summary } = useAnalyticsSummary();
-  const { data: payRunSummary } = usePayRunSummary();
-  const { data: recentRuns } = useRecentPayRuns();
-  const { data: components } = usePayrollComponents();
+  const [currency, setCurrency] = useState('USD');
+
+  const { data: summary } = useAnalyticsSummary(currency);
+  const { data: payRunSummary } = usePayRunSummary(currency);
+  const { data: recentRuns } = useRecentPayRuns(currency);
+  const { data: components } = usePayrollComponents(currency);
   const { data: employees, isLoading } = useEmployees({ status: 'Active', limit: 50 });
   const [activeTab, setActiveTab] = useState<'summary' | 'tax'>('summary');
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -39,11 +41,11 @@ export default function PayRunsPage() {
   const payrollData = empList.map((e) => ({ ...e, ...computePayroll(e) }));
 
   // Accurate backend totals
-  const totalGrossINR = payRunSummary?.totalGrossINR ?? 0;
-  const totalDeductionsINR = payRunSummary?.totalDeductionsINR ?? 0;
-  const totalNetINR = payRunSummary?.totalNetINR ?? 0;
-  const avgNetINR = payRunSummary?.avgNetINR ?? 0;
-  const totalMonthlyINR = summary?.monthlyPayrollINR ?? 0;
+  const totalGross = payRunSummary?.totalGross ?? 0;
+  const totalDeductions = payRunSummary?.totalDeductions ?? 0;
+  const totalNet = payRunSummary?.totalNet ?? 0;
+  const totalMonthly = summary?.monthlyPayroll ?? 0;
+  const fmt = (v: number) => formatCurrency(v, currency);
 
   return (
     <PageTransition className="p-4 sm:p-6 lg:p-8 space-y-6">
@@ -56,7 +58,19 @@ export default function PayRunsPage() {
           </div>
           <p className="text-sm text-slate-400 mt-0.5">Period: {period} | 30 Payable Days</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 border-r border-slate-200 pr-4">
+            <Globe className="w-4 h-4 text-slate-400 shrink-0" />
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="text-sm font-medium text-slate-700 bg-transparent border-none focus:ring-0 cursor-pointer p-0"
+            >
+              <option value="USD">USD</option>
+              <option value="INR">INR</option>
+              <option value="EUR">EUR</option>
+            </select>
+          </div>
           <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
             <Download className="w-4 h-4" /> Export
           </button>
@@ -117,7 +131,7 @@ export default function PayRunsPage() {
             </div>
             <div>
               <p className="text-xs text-slate-400">Payroll Cost</p>
-              <p className="text-lg font-bold text-slate-900 tabular-nums">{formatINR(totalMonthlyINR)}</p>
+              <p className="text-lg font-bold text-slate-900 tabular-nums">{fmt(totalMonthly)}</p>
             </div>
           </div>
         </div>
@@ -128,7 +142,7 @@ export default function PayRunsPage() {
             </div>
             <div>
               <p className="text-xs text-slate-400">Employees' Net Pay</p>
-              <p className="text-lg font-bold text-slate-900 tabular-nums">{formatINR(totalNetINR)}</p>
+              <p className="text-lg font-bold text-slate-900 tabular-nums">{fmt(totalNet)}</p>
             </div>
           </div>
         </div>
@@ -153,7 +167,7 @@ export default function PayRunsPage() {
           {components?.slice(2, 5).map((c) => (
             <StaggerItem key={c.component}>
               <p className="text-xs text-slate-400 uppercase tracking-wide">{c.component}</p>
-              <p className="text-lg font-bold text-slate-800 mt-0.5 tabular-nums">{formatINR(c.amountINR)}</p>
+              <p className="text-lg font-bold text-slate-800 mt-0.5 tabular-nums">{fmt(c.amount)}</p>
             </StaggerItem>
           ))}
         </StaggerContainer>
@@ -185,8 +199,7 @@ export default function PayRunsPage() {
                   <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Employee Name</th>
                   <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Paid Days</th>
                   <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Gross Pay</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Deductions</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Taxes</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Deductions</th>
                   <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Net Pay</th>
                 </tr>
               </thead>
@@ -208,10 +221,13 @@ export default function PayRunsPage() {
                         <p className="text-xs text-slate-400">{e.employeeId}</p>
                       </td>
                       <td className="text-center px-4 py-3.5 text-slate-600">{e.paidDays}</td>
-                      <td className="text-right px-4 py-3.5 font-medium text-slate-800 tabular-nums">{formatINRFull(e.gross)}</td>
-                      <td className="text-right px-4 py-3.5 text-slate-600 tabular-nums">{formatINRFull(e.totalDeductions)}</td>
-                      <td className="text-right px-4 py-3.5 text-slate-600 tabular-nums">{formatINRFull(e.tds)}</td>
-                      <td className="text-right px-4 py-3.5 font-bold text-slate-900 tabular-nums">{formatINRFull(e.netPay)}</td>
+                      <td className="text-right px-4 py-3.5 font-medium text-slate-800 tabular-nums">{formatCurrency(e.gross, e.currency)}</td>
+                      <td className="text-right px-4 py-3.5 text-slate-600 tabular-nums">
+                        <span title={`EPF+ESI+PT: ${formatCurrency(e.totalDeductions - e.tds, e.currency)} | TDS: ${formatCurrency(e.tds, e.currency)}`}>
+                          {formatCurrency(e.totalDeductions, e.currency)}
+                        </span>
+                      </td>
+                      <td className="text-right px-4 py-3.5 font-bold text-slate-900 tabular-nums">{formatCurrency(e.netPay, e.currency)}</td>
                     </tr>
                   ))
                 }
@@ -220,10 +236,9 @@ export default function PayRunsPage() {
                 <tfoot className="bg-slate-50 border-t-2 border-slate-200">
                   <tr>
                     <td className="px-5 py-3 text-xs font-bold text-slate-600 uppercase tracking-wide" colSpan={2}>Company Totals ({summary?.activeEmployees?.toLocaleString('en-IN')} employees)</td>
-                    <td className="text-right px-4 py-3 font-bold text-slate-800 tabular-nums">{formatINRFull(totalGrossINR)}</td>
-                    <td className="text-right px-4 py-3 font-bold text-slate-800 tabular-nums">{formatINRFull(totalDeductionsINR)}</td>
-                    <td className="text-right px-4 py-3 font-bold text-slate-800 tabular-nums"></td>
-                    <td className="text-right px-4 py-3 font-bold text-indigo-700 tabular-nums">{formatINRFull(totalNetINR)}</td>
+                    <td className="text-right px-4 py-3 font-bold text-slate-800 tabular-nums">{fmt(totalGross)}</td>
+                    <td className="text-right px-4 py-3 font-bold text-slate-800 tabular-nums">{fmt(totalDeductions)}</td>
+                    <td className="text-right px-4 py-3 font-bold text-indigo-700 tabular-nums">{fmt(totalNet)}</td>
                   </tr>
                 </tfoot>
               )}

@@ -2,21 +2,27 @@
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import { formatINR } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 import { PayrollTrendPoint } from '@/lib/api';
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  USD: '$', INR: '₹', EUR: '€', GBP: '£',
+  CAD: 'CA$', AUD: 'A$', SGD: 'S$', BRL: 'R$', JPY: '¥',
+};
+
+const CustomTooltip = ({ active, payload, label, currency }: any) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-lg text-xs">
       <p className="font-semibold text-slate-700 mb-1">{label}</p>
-      <p className="text-indigo-600 font-bold">{formatINR(payload[0].value)}</p>
+      <p className="text-indigo-600 font-bold">{formatCurrency(payload[0].value, currency ?? 'USD')}</p>
       <p className="text-slate-400">{payload[0]?.payload?.headcount?.toLocaleString()} employees</p>
     </div>
   );
 };
 
-export default function PayrollTrendChart({ data }: { data: PayrollTrendPoint[] }) {
+export default function PayrollTrendChart({ data, currency = 'USD' }: { data: PayrollTrendPoint[]; currency?: string }) {
+  const sym = CURRENCY_SYMBOLS[currency] ?? currency;
   return (
     <ResponsiveContainer width="100%" height={200}>
       <AreaChart data={data} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
@@ -30,13 +36,13 @@ export default function PayrollTrendChart({ data }: { data: PayrollTrendPoint[] 
         <XAxis dataKey="month" tick={{ fill: '#94a3b8', fontSize: 11 }} />
         <YAxis
           tick={{ fill: '#94a3b8', fontSize: 11 }}
-          tickFormatter={(v) => `₹${(v / 100_000).toFixed(0)}L`}
-          width={55}
+          tickFormatter={(v) => `${sym}${(v / 1000).toFixed(0)}k`}
+          width={60}
         />
-        <Tooltip content={<CustomTooltip />} />
+        <Tooltip content={<CustomTooltip currency={currency} />} />
         <Area
           type="monotone"
-          dataKey="totalPayrollINR"
+          dataKey="totalPayroll"
           stroke="#6366f1"
           strokeWidth={2.5}
           fill="url(#payrollGrad)"

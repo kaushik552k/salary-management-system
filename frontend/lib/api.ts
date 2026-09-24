@@ -103,14 +103,14 @@ export interface CreateEmployeePayload {
 export interface AnalyticsSummary {
   activeEmployees: number;
   totalEmployees: number;
-  totalPayrollUSD: number;
-  avgSalaryUSD: number;
-  maxSalaryUSD: number;
-  minSalaryUSD: number;
-  totalBonusUSD: number;
-  totalPayrollINR: number;
-  avgSalaryINR: number;
-  monthlyPayrollINR: number;
+  currency: string;
+  currencySymbol: string;
+  totalPayroll: number;
+  monthlyPayroll: number;
+  avgSalary: number;
+  maxSalary: number;
+  minSalary: number;
+  totalBonus: number;
   nextPayRunDate: string;
   daysToPayRun: number;
   pendingApprovals: number;
@@ -119,22 +119,25 @@ export interface AnalyticsSummary {
 export interface DeptBreakdown {
   department: string;
   count: number;
-  totalPayrollUSD: number;
-  avgSalaryUSD: number;
+  currency: string;
+  totalPayroll: number;
+  avgSalary: number;
 }
 
 export interface CountryBreakdown {
   country: string;
+  localCurrency: string;
   currency: string;
   count: number;
-  totalPayrollUSD: number;
-  avgSalaryUSD: number;
+  totalPayroll: number;
+  avgSalary: number;
 }
 
 export interface LevelBreakdown {
   level: string;
   count: number;
-  avgSalaryUSD: number;
+  currency: string;
+  avgSalary: number;
 }
 
 export interface DistributionBucket {
@@ -149,13 +152,14 @@ export interface EmploymentTypeBreakdown {
 
 export interface PayrollTrendPoint {
   month: string;
-  totalPayrollINR: number;
+  currency: string;
+  totalPayroll: number;
   headcount: number;
 }
 
 export interface PayrollComponent {
   component: string;
-  amountINR: number;
+  amount: number;
   percentage: number;
 }
 
@@ -170,14 +174,17 @@ export interface RecentPayRun {
   payDate: string;
   status: string;
   headcount: number;
-  totalPayrollINR: number;
+  currency: string;
+  totalPayroll: number;
 }
 
 export interface PayRunSummary {
-  totalGrossINR: number;
-  totalDeductionsINR: number;
-  totalNetINR: number;
-  avgNetINR: number;
+  currency: string;
+  currencySymbol: string;
+  totalGross: number;
+  totalDeductions: number;
+  totalNet: number;
+  avgNet: number;
   headcount: number;
 }
 
@@ -233,15 +240,15 @@ export const employeesApi = {
 // ─── Analytics API ───────────────────────────────────────────────────────────
 
 export const analyticsApi = {
-  summary: () => http<AnalyticsSummary>('/analytics/summary'),
-  byDepartment: () => http<DeptBreakdown[]>('/analytics/by-department'),
-  byCountry: () => http<CountryBreakdown[]>('/analytics/by-country'),
-  byLevel: () => http<LevelBreakdown[]>('/analytics/by-level'),
-  distribution: () => http<DistributionBucket[]>('/analytics/distribution'),
+  summary: (currency?: string) => http<AnalyticsSummary>(`/analytics/summary${buildQuery({ currency })}` ),
+  byDepartment: (currency?: string) => http<DeptBreakdown[]>(`/analytics/by-department${buildQuery({ currency })}`),
+  byCountry: (currency?: string) => http<CountryBreakdown[]>(`/analytics/by-country${buildQuery({ currency })}`),
+  byLevel: (currency?: string) => http<LevelBreakdown[]>(`/analytics/by-level${buildQuery({ currency })}`),
+  distribution: (currency?: string) => http<DistributionBucket[]>(`/analytics/distribution${buildQuery({ currency })}`),
   byEmploymentType: () => http<EmploymentTypeBreakdown[]>('/analytics/by-employment-type'),
-  payrollTrend: () => http<PayrollTrendPoint[]>('/analytics/payroll-trend'),
-  payrollComponents: () => http<PayrollComponent[]>('/analytics/payroll-components'),
+  payrollTrend: (currency?: string) => http<PayrollTrendPoint[]>(`/analytics/payroll-trend${buildQuery({ currency })}`),
+  payrollComponents: (currency?: string) => http<PayrollComponent[]>(`/analytics/payroll-components${buildQuery({ currency })}`),
   compliance: () => http<ComplianceItem[]>('/analytics/compliance'),
-  recentPayRuns: () => http<RecentPayRun[]>('/analytics/recent-pay-runs'),
-  payRunSummary: () => http<PayRunSummary>('/analytics/pay-runs/summary'),
+  recentPayRuns: (currency?: string) => http<RecentPayRun[]>(`/analytics/recent-pay-runs${buildQuery({ currency })}`),
+  payRunSummary: (currency?: string) => http<PayRunSummary>(`/analytics/pay-runs/summary${buildQuery({ currency })}`),
 };

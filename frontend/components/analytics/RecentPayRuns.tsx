@@ -2,7 +2,7 @@
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { RecentPayRun } from '@/lib/api';
-import { formatINR } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 
 export default function RecentPayRuns({ data }: { data: RecentPayRun[] }) {
   return (
@@ -18,7 +18,7 @@ export default function RecentPayRuns({ data }: { data: RecentPayRun[] }) {
               {run.status}
             </span>
             <p className="text-sm font-bold text-slate-800 tabular-nums">
-              {formatINR(run.totalPayrollINR)}
+              {formatCurrency(run.totalPayroll, run.currency ?? 'USD')}
             </p>
             <p className="text-xs text-slate-400">{run.payDate}</p>
           </div>

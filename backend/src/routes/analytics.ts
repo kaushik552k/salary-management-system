@@ -16,7 +16,7 @@ import {
 export const analyticsRouter = Router();
 
 const wrap = (fn: Function) => async (req: Request, res: Response, next: NextFunction) => {
-  try { res.json(await fn()); } catch (err) { next(err); }
+  try { res.json(await fn(req.query.currency as string)); } catch (err) { next(err); }
 };
 
 analyticsRouter.get('/summary', wrap(getSummary));

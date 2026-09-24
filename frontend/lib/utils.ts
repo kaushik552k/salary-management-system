@@ -6,10 +6,19 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCurrency(amount: number, currency: string): string {
-  return new Intl.NumberFormat('en-US', {
+  const isINR = currency === 'INR';
+  const locale = isINR ? 'en-IN' : 'en-US';
+  
+  if (isINR) {
+    if (amount >= 10_000_000) return `₹${(amount / 10_000_000).toFixed(2)}Cr`;
+    if (amount >= 100_000) return `₹${(amount / 100_000).toFixed(2)}L`;
+  }
+  
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
-    maximumFractionDigits: 0,
+    maximumFractionDigits: amount >= 1_000_000 ? 1 : 0,
+    notation: amount >= 1_000_000 ? 'compact' : 'standard',
   }).format(amount);
 }
 
