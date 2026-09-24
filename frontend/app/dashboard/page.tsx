@@ -5,15 +5,21 @@ import {
   useAnalyticsSummary, useByDepartment, useByLevel, useByEmploymentType,
   usePayrollTrend, usePayrollComponents, useCompliance, useRecentPayRuns,
 } from '@/hooks/use-analytics';
-import { formatINR, formatINRFull, formatDateLong, cn } from '@/lib/utils';
+import { formatCurrency, formatDateLong } from '@/lib/utils';
 import PayrollTrendChart from '@/components/analytics/PayrollTrendChart';
 import PieBreakdown from '@/components/analytics/PieBreakdown';
 import SalaryBarChart from '@/components/analytics/SalaryBarChart';
 import ComplianceWidget from '@/components/analytics/ComplianceWidget';
 import RecentPayRuns from '@/components/analytics/RecentPayRuns';
-import { Users, TrendingUp, Clock, Calendar, ArrowUp, Star, ChevronRight } from 'lucide-react';
+import { Users, TrendingUp, Clock, Calendar, ArrowUp, Star, ChevronRight, Globe } from 'lucide-react';
 import Link from 'next/link';
 import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/animations';
+
+const SUPPORTED_CURRENCIES = [
+  { code: 'USD', label: 'USD — US Dollar' },
+  { code: 'INR', label: 'INR — Indian Rupee' },
+  { code: 'EUR', label: 'EUR — Euro' },
+];
 
 function KpiCard({ title, value, sub, badge, accent, icon, loading }: {
   title: string;
@@ -50,14 +56,16 @@ function KpiCard({ title, value, sub, badge, accent, icon, loading }: {
 }
 
 export default function DashboardPage() {
-  const { data: summary, isLoading } = useAnalyticsSummary();
-  const { data: byDept } = useByDepartment();
-  const { data: byLevel } = useByLevel();
+  const [currency, setCurrency] = useState('USD');
+
+  const { data: summary, isLoading } = useAnalyticsSummary(currency);
+  const { data: byDept } = useByDepartment(currency);
+  const { data: byLevel } = useByLevel(currency);
   const { data: byType } = useByEmploymentType();
-  const { data: trend } = usePayrollTrend();
-  const { data: components } = usePayrollComponents();
+  const { data: trend } = usePayrollTrend(currency);
+  const { data: components } = usePayrollComponents(currency);
   const { data: compliance } = useCompliance();
-  const { data: recentRuns } = useRecentPayRuns();
+  const { data: recentRuns } = useRecentPayRuns(currency);
 
   const [greeting, setGreeting] = useState('Welcome');
 
@@ -70,6 +78,8 @@ export default function DashboardPage() {
     ? formatDateLong(summary.nextPayRunDate)
     : '—';
 
+  const fmt = (amount: number) => formatCurrency(amount, currency);
+
   return (
     <PageTransition className="p-4 sm:p-6 space-y-6">
       {/* Header */}
@@ -78,7 +88,24 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold text-slate-900">{greeting}!</h1>
           <p className="text-slate-400 text-sm mt-0.5">People thrive when payroll runs smoothly.</p>
         </div>
-        <p className="text-sm font-semibold text-indigo-500 mt-1">Payroll Today. A Stronger Tomorrow.</p>
+
+        {/* Currency Picker */}
+        <div className="flex items-center gap-2 self-start sm:self-center">
+          <Globe className="w-4 h-4 text-slate-400 shrink-0" />
+          <label htmlFor="currency-select" className="text-xs font-medium text-slate-500 whitespace-nowrap">
+            View in
+          </label>
+          <select
+            id="currency-select"
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+            className="text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg px-3 py-1.5 shadow-sm hover:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-colors cursor-pointer"
+          >
+            {SUPPORTED_CURRENCIES.map(c => (
+              <option key={c.code} value={c.code}>{c.label}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* KPI Cards */}
@@ -93,8 +120,8 @@ export default function DashboardPage() {
           loading={isLoading}
         />
         <KpiCard
-          title="Monthly Payroll Cost"
-          value={summary ? formatINR(summary.monthlyPayrollINR) : '—'}
+          title={`Monthly Payroll (${currency})`}
+          value={summary ? fmt(summary.monthlyPayroll) : '—'}
           sub="vs last month"
           badge={{ label: '8%', color: 'text-emerald-600' }}
           accent="bg-green-50"
@@ -125,14 +152,14 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-1">
             <div>
               <h3 className="text-sm font-semibold text-slate-800">Payroll Trend</h3>
-              <p className="text-xs text-slate-400">Total payroll cost over the last 6 months</p>
+              <p className="text-xs text-slate-400">Total payroll cost over the last 6 months ({currency})</p>
             </div>
             <Link href="/reports" className="text-xs font-semibold text-indigo-500 hover:text-indigo-600 flex items-center gap-1">
               View Reports <ChevronRight className="w-3 h-3" />
             </Link>
           </div>
           {trend ? (
-            <PayrollTrendChart data={trend} />
+            <PayrollTrendChart data={trend} currency={currency} />
           ) : (
             <div className="h-48 flex items-center justify-center">
               <div className="w-full h-32 bg-slate-100 rounded animate-pulse" />
@@ -221,14 +248,16 @@ export default function DashboardPage() {
       {/* Dept + Level Charts */}
       <StaggerContainer className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SalaryBarChart
-          title="Avg Salary by Department"
-          data={(byDept ?? []).map(d => ({ name: d.department, value: d.avgSalaryUSD, count: d.count }))}
+          title={`Avg Salary by Department (${currency})`}
+          data={(byDept ?? []).map(d => ({ name: d.department, value: d.avgSalary, count: d.count }))}
           color="#6366f1"
+          currency={currency}
         />
         <SalaryBarChart
-          title="Avg Salary by Job Level"
-          data={(byLevel ?? []).map(l => ({ name: l.level, value: l.avgSalaryUSD, count: l.count }))}
+          title={`Avg Salary by Job Level (${currency})`}
+          data={(byLevel ?? []).map(l => ({ name: l.level, value: l.avgSalary, count: l.count }))}
           color="#10b981"
+          currency={currency}
         />
       </StaggerContainer>
     </PageTransition>

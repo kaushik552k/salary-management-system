@@ -9,7 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { formatUSD } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 
 interface DataPoint {
   name: string;
@@ -22,6 +22,7 @@ interface Props {
   data: DataPoint[];
   color: string;
   valueLabel?: string;
+  currency?: string;
 }
 
 const CustomTooltip = ({
@@ -29,11 +30,13 @@ const CustomTooltip = ({
   payload,
   label,
   valueLabel,
+  currency,
 }: {
   active?: boolean;
   payload?: { value: number; payload: DataPoint }[];
   label?: string;
   valueLabel?: string;
+  currency?: string;
 }) => {
   if (!active || !payload?.length) return null;
   const d = payload[0];
@@ -43,7 +46,7 @@ const CustomTooltip = ({
       <p className="text-slate-600">
         {valueLabel ?? 'Avg Salary'}:{' '}
         <span className="text-slate-900 font-bold">
-          {valueLabel ? d.value.toLocaleString() : formatUSD(d.value)}
+          {valueLabel ? d.value.toLocaleString() : formatCurrency(d.value, currency ?? 'USD')}
         </span>
       </p>
       <p className="text-slate-400">Headcount: {d.payload.count.toLocaleString()}</p>
@@ -51,7 +54,7 @@ const CustomTooltip = ({
   );
 };
 
-export default function SalaryBarChart({ title, data, color, valueLabel }: Props) {
+export default function SalaryBarChart({ title, data, color, valueLabel, currency = 'USD' }: Props) {
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
       <h3 className="text-sm font-semibold text-slate-700 mb-6">{title}</h3>
@@ -73,7 +76,7 @@ export default function SalaryBarChart({ title, data, color, valueLabel }: Props
               tickFormatter={(v) => (valueLabel ? v.toLocaleString() : `$${(v / 1000).toFixed(0)}k`)}
               width={55}
             />
-            <Tooltip content={<CustomTooltip valueLabel={valueLabel} />} cursor={{ fill: '#f8fafc' }} />
+            <Tooltip content={<CustomTooltip valueLabel={valueLabel} currency={currency} />} cursor={{ fill: '#f8fafc' }} />
             <Bar dataKey="value" fill={color} radius={[4, 4, 0, 0]} maxBarSize={48} />
           </BarChart>
         </ResponsiveContainer>
