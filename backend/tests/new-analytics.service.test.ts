@@ -28,7 +28,7 @@ describe('New Analytics Services', () => {
       (prisma.employee.findMany as jest.Mock).mockResolvedValue([]);
       const trend = await getPayrollTrend();
       expect(trend.length).toBe(6);
-      expect(trend[0].totalPayrollINR).toBe(0);
+      expect(trend[0].totalPayroll).toBe(0);
     });
 
     it('calculates payroll trend based on joining date and status', async () => {
@@ -79,7 +79,7 @@ describe('New Analytics Services', () => {
       const runs = await getRecentPayRuns();
       expect(runs.length).toBe(4);
       expect(runs[0].headcount).toBe(1);
-      expect(runs[0].totalPayrollINR).toBeGreaterThan(0);
+      expect(runs[0].totalPayroll).toBeGreaterThan(0);
     });
   });
 });

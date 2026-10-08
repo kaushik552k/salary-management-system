@@ -45,9 +45,9 @@ describe('Analytics Service', () => {
       expect(result.activeEmployees).toBe(2);
       expect(result.totalEmployees).toBe(3);
       // ~100k + ~99.6k = ~199.6k
-      expect(result.totalPayrollUSD).toBeGreaterThan(190_000);
-      expect(result.totalPayrollUSD).toBeLessThan(210_000);
-      expect(result.avgSalaryUSD).toBeGreaterThan(90_000);
+      expect(result.totalPayroll).toBeGreaterThan(190_000);
+      expect(result.totalPayroll).toBeLessThan(210_000);
+      expect(result.avgSalary).toBeGreaterThan(90_000);
     });
 
     it('returns zero values when no employees exist', async () => {
@@ -58,8 +58,8 @@ describe('Analytics Service', () => {
 
       const result = await getSummary();
 
-      expect(result.totalPayrollUSD).toBe(0);
-      expect(result.avgSalaryUSD).toBe(0);
+      expect(result.totalPayroll).toBe(0);
+      expect(result.avgSalary).toBe(0);
       expect(result.activeEmployees).toBe(0);
     });
   });
@@ -78,8 +78,8 @@ describe('Analytics Service', () => {
 
       expect(eng).toBeDefined();
       expect(eng?.count).toBe(2);
-      expect(eng?.avgSalaryUSD).toBe(110_000);
-      expect(hr?.avgSalaryUSD).toBe(60_000);
+      expect(eng?.avgSalary).toBe(110_000);
+      expect(hr?.avgSalary).toBe(60_000);
     });
 
     it('sorts results by average salary descending', async () => {
@@ -121,9 +121,9 @@ describe('Analytics Service', () => {
 
       const result = await getDistribution();
 
-      const under30 = result.find((b) => b.label === '< $30k');
-      const bucket30_60 = result.find((b) => b.label === '$30k–60k');
-      const bucket90_120 = result.find((b) => b.label === '$90k–120k');
+      const under30 = result.find((b) => b.label === '< 30k');
+      const bucket30_60 = result.find((b) => b.label === '30k–60k');
+      const bucket90_120 = result.find((b) => b.label === '90k–120k');
 
       expect(under30?.count).toBe(1);
       expect(bucket30_60?.count).toBe(1);

@@ -5,8 +5,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(amount: number, currency: string): string {
-  const isINR = currency === 'INR';
+export function formatCurrency(amount: number, currency: string = 'USD'): string {
+  const curr = currency || 'USD';
+  const isINR = curr === 'INR';
   const locale = isINR ? 'en-IN' : 'en-US';
   
   if (isINR) {
@@ -16,7 +17,7 @@ export function formatCurrency(amount: number, currency: string): string {
   
   return new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency,
+    currency: curr,
     maximumFractionDigits: amount >= 1_000_000 ? 1 : 0,
     notation: amount >= 1_000_000 ? 'compact' : 'standard',
   }).format(amount);

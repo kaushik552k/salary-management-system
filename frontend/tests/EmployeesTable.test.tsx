@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import EmployeesTable from '../app/employees/EmployeesTable';
 import { useEmployees, useDeleteEmployee } from '../hooks/use-employees';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -93,7 +93,9 @@ describe('EmployeesTable', () => {
     const searchInput = screen.getByPlaceholderText('Search name, email, ID...');
     fireEvent.change(searchInput, { target: { value: 'Alice' } });
     
-    jest.advanceTimersByTime(300);
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
     
     expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('search=Alice'));
     jest.useRealTimers();
